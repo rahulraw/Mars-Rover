@@ -1,6 +1,6 @@
 # TCP Client Code	
 
-host = "192.168.1.21" #set the server address to variable host
+host = "127.0.0.1" #set the server address to variable host
 
 port = 4446 #sets the variable port to 4446
 
