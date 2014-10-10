@@ -1,0 +1,16 @@
+*******************************************************************************
+* Software                                                                    *
+*******************************************************************************
+
+The Software directory will consist of two different directories:
+    - Incubation
+    - Workspace
+
+The idea is that all code that we write will eventually be wrapped as a ROS 
+package/node. Therefore, all the code will eventually belong under 'Workspace' 
+which is our ROS workspace.
+
+However, it is understandable to separate code from ROS for testing purposes. 
+Such code will temporarily live in 'Incubation' where it will need to be worked 
+on and verified before it is moved to 'Workspace'.
+

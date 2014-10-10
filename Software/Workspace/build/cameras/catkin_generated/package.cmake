@@ -1,0 +1,7 @@
+set(_CATKIN_CURRENT_PACKAGE "cameras")
+set(cameras_MAINTAINER "sean <sean@todo.todo>")
+set(cameras_DEPRECATED "")
+set(cameras_VERSION "0.0.0")
+set(cameras_BUILD_DEPENDS "message_generation" "rospy" "std_msgs")
+set(cameras_RUN_DEPENDS "message_runtime" "rospy" "std_msgs")
+set(cameras_BUILDTOOL_DEPENDS "catkin")

@@ -1,5 +1,0 @@
-- name: api
-  hosts: all
-  sudo: yes
-
-  roles:
