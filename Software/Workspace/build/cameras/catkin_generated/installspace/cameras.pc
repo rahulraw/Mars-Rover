@@ -1,8 +1,0 @@
-prefix=/home/sean/FYDP/uwrobotics.uwmrt/Software/Workspace/install
-
-Name: cameras
-Description: Description of cameras
-Version: 0.0.0
-Cflags: -I/home/sean/FYDP/uwrobotics.uwmrt/Software/Workspace/install/include
-Libs: -L/home/sean/FYDP/uwrobotics.uwmrt/Software/Workspace/install/lib 
-Requires: message_runtime
