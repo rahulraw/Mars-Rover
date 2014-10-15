@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import sys
 import traceback
 
 from cv_bridge import CvBridge, CvBridgeError
@@ -9,8 +10,8 @@ from lib.webcam import Webcam, ImageNoneTypeException
 from sensor_msgs.msg import Image
 
 class Camera:
-    def __init__(self, topic = 'video_stream', node = 'camera'):
-        self.webcam = Webcam(scale = 0.5, camera_id = 0)
+    def __init__(self, topic = 'video_stream', node = 'camera', camera_id = 1, scale = 0.5):
+        self.webcam = Webcam(scale, camera_id)
         self.webcam.start_capture()
         self.topic = topic
         self.node = node
@@ -42,6 +43,14 @@ class Camera:
         
 if __name__ == '__main__':
     try:
-        camera = Camera()
+        args = [1, 0.5, "video_stream", "camera"]
+           
+        for index, arg in enumerate(args):
+            try:
+	        args[index] = sys.argv[index + 1]
+            except: 
+                pass
+            
+        camera = Camera(topic = args[2], node = args[3], camera_id = int(args[0]), scale = float(args[1]))
         camera.start()
     except rospy.ROSInterruptException: pass

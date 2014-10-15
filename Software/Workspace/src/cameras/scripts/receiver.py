@@ -3,6 +3,7 @@
 import cv2
 import numpy as np
 import rospy
+import sys
 
 from cv_bridge import CvBridge, CvBridgeError
 from lib.messages import Messages
@@ -34,5 +35,13 @@ class Receiver:
         rospy.spin()
         
 if __name__ == '__main__':
-    receiver = Receiver()
+    args = ["video_stream", "receiver"]
+           
+    for index, arg in enumerate(args):
+        try:
+            args[index] = sys.argv[index + 1]
+        except: 
+            pass
+            
+    receiver = Receiver(topic = args[0], node = args[1])
     receiver.start()
