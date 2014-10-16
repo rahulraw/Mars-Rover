@@ -583,28 +583,67 @@ def readerrorstate():
     if crc==readbyte()&0x7F:
         return val
     return -1
+#class Rotation:
+   # def __init__(self, deg, m1EncVal, proportionalConstant = 0.3, intergra#lConstant = 0.3, UpperEpsilon = 70.368*3, LowerEpsilon = 70.368*(-3),  ):
+        
 
-def rotate(deg, speed):
-    numb_ticks = 70*deg
-    print(numb_ticks)
+
+def rotate(deg):
+    num_ticks = 70.368*deg
     m1EncVal = readM1encoder()[0];
+    proportionalConstant = 0.3;
+    integralConstant = 0
+    UpperEpsilon = 70.368*3;
+    LowerEpsilon = 70.368*(-3);
+    print("Position of Motor1: ", m1EncVal);
+    Err = num_ticks - m1EncVal;
+    Reset = Err
+    while (Err > UpperEpsilon or Err < LowerEpsilon):
+    
+        if Err > 0:
+            M1Forward(int((Err*proportionalConstant + integralConstant*Reset)%255));
+            try:
+                m1EncVal_new = readM1encoder()[0];
+            except:
+                pass
+            print("Position of Motor1(Move Forward): ", m1EncVal_new);
+
+        elif Err < 0:
+            M1Backward(int((Err*proportionalConstant + integralConstant*Reset)%255));
+            try:
+                m1EncVal_new = readM1encoder()[0];
+            except:
+                pass
+            print("Position of Motor1(Move Backward): ", m1EncVal_new);
+
+
+        Err = num_ticks - (m1EncVal_new - m1EncVal);
+        Reset = Reset + Err
+        print("New Error: ", Err);
+        
+    M1Forward(0);
+    M1Backward(0);
+    return
+
+    #print(numb_ticks)
+    #m1EncVal = readM1encoder()[0];
    # m1EncVal2 = readM1encoder()[0];
-   print("m1 val: ", m1EncVal)
-    for i in range (0,50):
-        m1EncVal2 = readM1encoder()[0];
+   #print("m1 val: ", m1EncVal)
+    #for i in range (0,50):
+        #m1EncVal2 = readM1encoder()[0];
         #print("**m2val ", m1EncVal2)
-        if (m1EncVal2-m1EncVal)<(numb_ticks-70):
-                M1Forward(speed)
+        #if (m1EncVal2-m1EncVal)<(numb_ticks-70):
+               # M1Forward(speed)
                # time.sleep(0.01)
-        elif (m1EncVal2-m1EncVal)>(numb_ticks+100):
-                M1Backward(speed)
+        #elif (m1EncVal2-m1EncVal)>(numb_ticks+100):
+                #M1Backward(speed)
                # time.sleep(0.01)
-        else:
-                M1Forward(0)
-                M1Backward(0)
-                return
+        #else:
+                #M1Forward(0)
+                #M1Backward(0)
+                #return
        # m1EncVal2 = readM1encoder()[0]
-print("Roboclaw Example 1\r\n")
+#print("Roboclaw Example 1\r\n")
 
 #Rasberry Pi/Linux Serial instance example
 #port = serial.Serial("/dev/ttyACM0", baudrate=115200, timeout=0.1)
@@ -617,9 +656,11 @@ sendcommand(128,21);
 rcv = port.read(32)
 print(repr(rcv))
 
-cnt = 0
-while True:
-    cnt=cnt+1
+
+rotate(deg=90)
+# cnt = 0
+# while True:
+#    cnt=cnt+1
 #    print("Count = ",cnt)
     
 
@@ -656,14 +697,14 @@ while True:
 #    SetM1DutyAccel(1500,-1500)
 #    SetM2DutyAccel(1500,1500)
 #    time.sleep(2)
-    rotate(90, 10)
-    time.sleep(1)
+    #rotate(90, 10)
+    #time.sleep(1)
 #    for i in range(1, 200):
 #        M1Forward(30)
 #        time.sleep(10)
 
-    m1EncVal = readM1encoder()
-    print("Forward Val:%20d Status:%d" % (m1EncVal[0], m1EncVal[1]))
+    #m1EncVal = readM1encoder()
+    #print("Forward Val:%20d Status:%d" % (m1EncVal[0], m1EncVal[1]))
 
 
 #    for i in range(1, 200):
