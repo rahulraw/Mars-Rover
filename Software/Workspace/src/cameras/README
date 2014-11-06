@@ -1,0 +1,71 @@
+*******************************************************************************
+* Cameras                                                                     *
+*******************************************************************************
+
+Author: Sean Po
+Email: s.po@live.com
+
+The Cameras package is a package that is responsible for communicating video
+feed across ROS nodes.
+
+- Local setup
+
+    Initiate ROS Core:
+
+        $ roscore
+    
+    Run camera.py and receiver.py:
+
+        $ rosrun cameras camera.py
+        $ rosrun cameras receiver.py
+
+    If everything is set up properly, you should see the video feed show up.
+
+- Network setup
+
+    ** Make sure you are using the VIP2400 routers.
+    
+    After connecting the routers make sure that each machine's hostname is 
+    registered in the other's /etc/hosts file. To do this, find the IP and 
+    hostname of each machine:
+
+    <USER>@<HOSTNAME>$ ifconfig
+
+    Then open /etc/hosts in both machines and add the other's IP hostname 
+    combination in the file. It should look like the following:
+
+        /etc/hosts
+
+        127.0.0.1 localhost
+        ...
+        <IP> <HOSTNAME>
+        ...
+
+    When you have made changes to the /etc/hosts file, run the following
+    on both machines. The "MASTER" or "REMOTE" inside the arrows brackets
+    denotes the machine to run the command on. This notation will be used for 
+    the remainder of the README:
+
+        <MASTER>$ sudo /etc/init.d/networking restart
+        <REMOTE>$ sudo /etc/init.d/networking restart
+
+    Next, choose one of your machines to be the master, and run the 
+    following on both machines:
+
+       <MASTER>$ export ROS_MASTER_URI=http://<MASTERHOSTNAME>:11311
+       <REMOTE>$ export ROS_MASTER_URI=http://<MASTERHOSTNAME>:11311
+ 
+    Next, initiate ROS Core on the master machine:
+
+        <MASTER>$ roscore
+    
+    Run camera.py on the master machine:
+
+        <MASTER>$ rosrun cameras camera.py
+
+    Run receiver.py on the remote machine:
+
+        <REMOTE>$ rosrun cameras receiver.py
+
+    If everything is set up properly, you should see the video feed show up on
+    the remote machine.

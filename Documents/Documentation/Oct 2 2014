@@ -1,0 +1,17 @@
+RC Range Test
+
+With Spektrum Dx6i and AR6200 with additional attachment, tested range on Columbia road resulting in intermittent connection at approx. 300m.
+
+IP Number convention
+
+192.168.1.11  Remote Router
+192.168.1.12  Remote PC
+192.168.1.21  Master Router
+192.168.1.22  Master PC
+
+if working, should be able to ping other computer, both ways.
+
+Server, client program used to send messages. Software can be found at:
+
+	<ROOT>/Software/Comms/client.py
+	<ROOT>/Software/Comms/server.py
