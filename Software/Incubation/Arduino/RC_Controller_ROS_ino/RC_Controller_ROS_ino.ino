@@ -219,18 +219,18 @@ void loop() {
   if (direct < 3 || direct > -3)
     direct = 0;
   
-  nh.spinOnce();
-  
-  if(pulseTimeElev <= 1033)
-    pulseTimeElev = 1033;
-  else if(pulseTimeElev >= 1992)
-    pulseTimeElev = 1992;
-  
-  spd = map(pulseTimeElev, 1033, 1992, -127, 127); // convert rc stick speed to speed values (-127 to 127)
   if (spd < 3 || spd > -3)
     spd = 0;
   
   nh.spinOnce();
+  
+  if(pulseTimeElev <= 1120)
+    pulseTimeElev = 1120;
+  else if(pulseTimeElev >= 2000)
+    pulseTimeElev = 2000;
+
+  spd = map(pulseTimeElev, 1120, 2000, -127, 127); // convert rc stick speed to speed values (-127 to 127)
+
   RC_msg.data[0] = spd;
   RC_msg.data[1] = direct;
   RC_msg.data[2] = 0;
