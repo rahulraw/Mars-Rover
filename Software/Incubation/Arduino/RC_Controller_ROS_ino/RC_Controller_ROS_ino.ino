@@ -216,12 +216,20 @@ void loop() {
     pulseTimeThro = 1992;
 
   direct = map(pulseTimeThro, 1033, 1992, -90, 90); // rc direction stick position in degrees
+  if (direct < 3 || direct > -3)
+    direct = 0;
+  
   nh.spinOnce();
+  
   if(pulseTimeElev <= 1033)
     pulseTimeElev = 1033;
   else if(pulseTimeElev >= 1992)
     pulseTimeElev = 1992;
-  spd = map(pulseTimeElev, 1033, 1992, -100, 100); // convert rc stick speed to speed values (-127 to 127)
+  
+  spd = map(pulseTimeElev, 1033, 1992, -127, 127); // convert rc stick speed to speed values (-127 to 127)
+  if (spd < 3 || spd > -3)
+    spd = 0;
+  
   nh.spinOnce();
   RC_msg.data[0] = spd;
   RC_msg.data[1] = direct;
