@@ -200,9 +200,6 @@ void setup() {
   Serial.begin(9600);
 
   Serial.println("Waiting.......");
-  //do the switch flick thing to preceed with controlling the robot
-  //while (pulseTimeGear > SWITCH_THRESHOLD);
-  //while (pulseTimeGear < SWITCH_THRESHOLD);
 
   Serial.println("Start!");
 }
@@ -237,7 +234,7 @@ void loop() {
   nh.spinOnce();
   RC_msg.data[0] = spd;
   RC_msg.data[1] = direct;
-  RC_msg.data[2] = 0;
+  RC_msg.data[2] = (pulseTimeGear > SWITCH_THRESHOLD)? 1 : 0;
   RC_msg.data[3] = 0;
     
   //Serial.println(spd);

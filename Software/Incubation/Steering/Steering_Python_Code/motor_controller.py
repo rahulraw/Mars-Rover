@@ -38,36 +38,39 @@ class Steering:
 
     def callback(self, data):
         try:
-            self.Elev =  data.data[0]; ## Order of which class method might be important.
-            rospy.loginfo("The Elev value is: %s" % (data.data[0]))
-            self.Thro = data.data[1];
-            #self.num_ticks = 70.368*self.deg;
-            rospy.loginfo("The Thro value is: %s" % (data.data[1]))
-            
-            steering_calc.calc_all(self.Thro, self.Elev, False);
-            
-            self.spd = steering_calc.velocity_left;
-            self.run(self.motorControllerFL);
-            self.run(self.motorControllerBL);
-            self.spd = steering_calc.velocity_right;
-            self.run(self.motorControllerFR);
-            self.run(self.motorControllerBR);           
+            if data.data[2]:
+                self.stop()
+            else:
+                self.Elev =  data.data[0]; ## Order of which class method might be important.
+                rospy.loginfo("The Elev value is: %s" % (data.data[0]))
+                self.Thro = data.data[1];
+                #self.num_ticks = 70.368*self.deg;
+                rospy.loginfo("The Thro value is: %s" % (data.data[1]))
+                
+                steering_calc.calc_all(self.Thro, self.Elev, False);
+                
+                self.spd = steering_calc.velocity_left;
+                self.run(self.motorControllerFL);
+                self.run(self.motorControllerBL);
+                self.spd = steering_calc.velocity_right;
+                self.run(self.motorControllerFR);
+                self.run(self.motorControllerBR);           
 
-            self.deg = steering_calc.front_left_angle;
-            self.num_ticks = 70.368*self.deg;
-            self.rotate(self.motorControllerFL);
+                self.deg = steering_calc.front_left_angle;
+                self.num_ticks = 70.368*self.deg;
+                self.rotate(self.motorControllerFL);
 
-            self.deg = steering_calc.front_right_angle;
-            self.num_ticks = 70.368*self.deg;
-            self.rotate(self.motorControllerFR);
+                self.deg = steering_calc.front_right_angle;
+                self.num_ticks = 70.368*self.deg;
+                self.rotate(self.motorControllerFR);
 
-            self.deg = steering_calc.back_left_angle;
-            self.num_ticks = 70.368*self.deg;
-            self.rotate(self.motorControllerBL);
+                self.deg = steering_calc.back_left_angle;
+                self.num_ticks = 70.368*self.deg;
+                self.rotate(self.motorControllerBL);
 
-            self.deg = steering_calc.back_right_angle;
-            self.num_ticks = 70.368*self.deg;
-            self.rotate(self.motorControllerBR);
+                self.deg = steering_calc.back_right_angle;
+                self.num_ticks = 70.368*self.deg;
+                self.rotate(self.motorControllerBR);
 
         except:
             traceback.print_exc()
@@ -117,7 +120,7 @@ class Steering:
 
     #True Position: Tick value that ranges between 0 and 4 billion.
     #Mod Position: Tick value that ranges between -90*70.368 and +90.368*70.368.
-    def rotate(self,motorController):
+    def rotate(self, motorController):
        self.m1EncVal = self.__convert_True_to_Mod__(motorController.readM1encoder()[0]);
        print("Mod Position is: ", self.m1EncVal);
        Err = self.num_ticks - self.m1EncVal;
@@ -136,6 +139,17 @@ class Steering:
        else:
            motorController.M1Forward(0);
        return
+
+    def stop(self):
+        self.motorControllerFL.M1Forward(0);
+        self.motorControllerBL.M1Forward(0);
+        self.motorControllerFR.M1Forward(0);
+        self.motorControllerBR.M1Forward(0);           
+
+        self.motorControllerFL.M2Forward(0);
+        self.motorControllerBL.M2Forward(0);
+        self.motorControllerFR.M2Forward(0);
+        self.motorControllerBR.M2Forward(0);           
 
 if __name__ == '__main__':
     args = ["RCValues", "RoboClaw"]
