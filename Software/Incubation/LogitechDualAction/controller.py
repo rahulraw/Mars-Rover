@@ -16,7 +16,7 @@ while 1:
         # If the length of the msg list is 8...
         if len(msg) == 8:
  
-         # Button event if 6th byte is 1
+            # Button event if 6th byte is 1
             if msg[6] == 1:
                 if msg[4]  == 1:
                     print 'button', msg[7], 'down'
