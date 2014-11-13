@@ -26,7 +26,7 @@ volatile unsigned long timerStartGear;
 
 volatile int pulseTimeThro = 1512;
 volatile int pulseTimeAile;
-volatile int pulseTimeElev = 1512;
+volatile int pulseTimeElev = 1560;
 volatile int pulseTimeRudd = 1308; // zero velocity command
 volatile int pulseTimeGear = SWITCH_THRESHOLD + 50;
 
@@ -177,7 +177,7 @@ void calcGear()
 }
 
 void setup() {
-
+  //ROS Publisher initialization and setup of Float32MultiArray.
   nh.initNode();
   RC_msg.layout.dim = (std_msgs::MultiArrayDimension *)
   malloc(sizeof(std_msgs::MultiArrayDimension) * 2);
@@ -210,33 +210,37 @@ void setup() {
 void loop() {
 
 // reading in from the remote control
-  if(pulseTimeThro <= 1033) // Direction
-    pulseTimeThro = 1033;
-  else if(pulseTimeThro >= 1992)
-    pulseTimeThro = 1992;
-
-  direct = map(pulseTimeThro, 1033, 1992, -90, 90); // rc direction stick position in degrees
-  if (direct < 3 || direct > -3)
+  Serial.print(pulseTimeThro);
+  if(pulseTimeThro <= 984) // Direction
+    pulseTimeThro = 984;
+  else if(pulseTimeThro >= 2032)
+    pulseTimeThro = 2032;
+  direct = map(pulseTimeThro, 984, 2032, -90, 90); // rc direction stick position in degrees
+  if (direct < 3 && direct > -3){
     direct = 0;
+  }
+  Serial.print(" ");
+  Serial.print(direct);
   
-  if (spd < 3 || spd > -3)
-    spd = 0;
-  
-  nh.spinOnce();
-  
+  Serial.print(" ");
+  Serial.println(pulseTimeElev);
   if(pulseTimeElev <= 1120)
     pulseTimeElev = 1120;
   else if(pulseTimeElev >= 2000)
     pulseTimeElev = 2000;
-
+  
   spd = map(pulseTimeElev, 1120, 2000, -127, 127); // convert rc stick speed to speed values (-127 to 127)
-
+  if (spd < 3 && spd > -3){
+    spd = 0;
+  }
+  //ROS Float32MultiArray spd and direct assigned.
+  nh.spinOnce();
   RC_msg.data[0] = spd;
   RC_msg.data[1] = direct;
   RC_msg.data[2] = 0;
   RC_msg.data[3] = 0;
     
-  Serial.println(spd);
+  //Serial.println(spd);
   pub_RC.publish(&RC_msg);
   nh.spinOnce();
   delay(50);
