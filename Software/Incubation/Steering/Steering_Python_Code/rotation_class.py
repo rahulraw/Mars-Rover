@@ -1,3 +1,6 @@
+# Defines the rotation of the wheel given an angle input from the RC
+# This code has been duplicated over to motor_controller.py and is not necessary
+
 import rospy
 from std_msgs.msg import Float32MultiArray
 import serial

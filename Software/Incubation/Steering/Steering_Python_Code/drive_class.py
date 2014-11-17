@@ -1,3 +1,6 @@
+# Defines the speed of the wheel with a value from the RC
+# This code is duplicated in motor_controller.py and is not required to run
+
 import rospy
 from std_msgs.msg import Float32MultiArray
 import serial

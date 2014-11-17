@@ -1,3 +1,6 @@
+//SERIAL PRINTS DO NOT WORK WITH ROS
+
+
 #define CHANNEL_1_PIN 2 //Throttle
 #define CHANNEL_2_PIN 3 //Aile
 #define CHANNEL_3_PIN 21 //Elev
@@ -6,17 +9,6 @@
 
 #define SWITCH_THRESHOLD    1600
 #define SWITCH_THRESHOLD_AILE    1200
-
-#include <ros.h>
-#include <std_msgs/Float32.h> 
-#include <std_msgs/Float32MultiArray.h>
-
-ros::NodeHandle  nh;
-
-//Set up the ros node and publisher
-std_msgs::Float32MultiArray RC_msg;
-ros::Publisher pub_RC("RCValues", &RC_msg);
-char dim0_label[] = "RCValues";
 
 volatile unsigned long timerStartThro;
 volatile unsigned long timerStartAile;
@@ -54,6 +46,88 @@ int i=0;
 
 int direct;
 int spd;
+
+
+#include <ArduinoHardware.h>
+#include <ros.h>
+#include <std_msgs/Int16MultiArray.h>
+ros::NodeHandle  nh;
+
+
+//Set up the ros node and publisher
+std_msgs::Int16MultiArray RC_msg;
+ros::Publisher pub_RC("RCValues", &RC_msg);
+char dim0_label[] = "RCValues";
+
+
+
+void setup() {
+  //ROS Publisher initialization and setup of Float32MultiArray.
+  nh.initNode();
+  RC_msg.layout.dim = (std_msgs::MultiArrayDimension *)
+  malloc(sizeof(std_msgs::MultiArrayDimension) * 1);
+  RC_msg.layout.dim[0].label = dim0_label;
+  RC_msg.layout.dim[0].size = 4; 
+  RC_msg.layout.dim[0].stride = 1*4;
+  RC_msg.layout.data_offset = 0;
+  RC_msg.data_length = 4;
+  RC_msg.data = (int *)malloc(sizeof(int)*4);
+  nh.advertise(pub_RC);
+  
+  
+  //timer_start = 0;
+  attachInterrupt(0, calcThro, CHANGE);
+  attachInterrupt(1, calcAile, CHANGE);
+  attachInterrupt(2, calcElev, CHANGE);
+  attachInterrupt(3, calcRudd, CHANGE);
+  attachInterrupt(5, calcGear, CHANGE);
+
+  //Serial.begin(9600);
+
+  //Serial.println("Waiting.......");
+
+  //Serial.println("Start!");
+}
+
+void loop() {
+
+// reading in from the remote control
+  //Serial.print(pulseTimeThro);
+  if(pulseTimeThro <= 984) // Direction
+    pulseTimeThro = 984;
+  else if(pulseTimeThro >= 2032)
+    pulseTimeThro = 2032;
+  direct = map(pulseTimeThro, 984, 2032, -90, 90); // rc direction stick position in degrees
+  if (direct < 3 && direct > -3){
+    direct = 0;
+  }
+  //Serial.print(" ");
+  //Serial.print(direct);
+  
+  //Serial.print(" ");
+  //Serial.println(pulseTimeElev);
+  if(pulseTimeElev <= 1120)
+    pulseTimeElev = 1120;
+  else if(pulseTimeElev >= 2000)
+    pulseTimeElev = 2000;
+  
+  spd = map(pulseTimeElev, 1120, 2000, -127, 127); // convert rc stick speed to speed values (-127 to 127)
+  if (spd < 3 && spd > -3){
+    spd = 0;
+  }
+  //ROS Float32MultiArray spd and direct assigned.
+  nh.spinOnce();
+  RC_msg.data[0] = spd;
+  RC_msg.data[1] = direct;
+  RC_msg.data[2] = (pulseTimeGear > SWITCH_THRESHOLD)? 1 : 0;
+  RC_msg.data[3] = 0;
+    
+  ////Serial.println(spd);
+  pub_RC.publish(&RC_msg);
+  nh.spinOnce();
+  delay(50);
+  
+}
 
 
 
@@ -174,72 +248,4 @@ void calcGear()
       }
     }
   }
-}
-
-void setup() {
-  //ROS Publisher initialization and setup of Float32MultiArray.
-  nh.initNode();
-  RC_msg.layout.dim = (std_msgs::MultiArrayDimension *)
-  malloc(sizeof(std_msgs::MultiArrayDimension) * 2);
-  RC_msg.layout.dim[0].label = dim0_label;
-  RC_msg.layout.dim[0].size = 4;
-  RC_msg.layout.dim[0].stride = 1*4;
-  RC_msg.layout.data_offset = 0;
-  RC_msg.data_length = 4;
-  RC_msg.data = (float *)malloc(sizeof(float)*4);
-  nh.advertise(pub_RC);
-  
-  
-  //timer_start = 0;
-  attachInterrupt(0, calcThro, CHANGE);
-  attachInterrupt(1, calcAile, CHANGE);
-  attachInterrupt(2, calcElev, CHANGE);
-  attachInterrupt(3, calcRudd, CHANGE);
-  attachInterrupt(5, calcGear, CHANGE);
-
-  Serial.begin(9600);
-
-  Serial.println("Waiting.......");
-
-  Serial.println("Start!");
-}
-
-void loop() {
-
-// reading in from the remote control
-  Serial.print(pulseTimeThro);
-  if(pulseTimeThro <= 984) // Direction
-    pulseTimeThro = 984;
-  else if(pulseTimeThro >= 2032)
-    pulseTimeThro = 2032;
-  direct = map(pulseTimeThro, 984, 2032, -90, 90); // rc direction stick position in degrees
-  if (direct < 3 && direct > -3){
-    direct = 0;
-  }
-  Serial.print(" ");
-  Serial.print(direct);
-  
-  Serial.print(" ");
-  Serial.println(pulseTimeElev);
-  if(pulseTimeElev <= 1120)
-    pulseTimeElev = 1120;
-  else if(pulseTimeElev >= 2000)
-    pulseTimeElev = 2000;
-  
-  spd = map(pulseTimeElev, 1120, 2000, -127, 127); // convert rc stick speed to speed values (-127 to 127)
-  if (spd < 3 && spd > -3){
-    spd = 0;
-  }
-  //ROS Float32MultiArray spd and direct assigned.
-  nh.spinOnce();
-  RC_msg.data[0] = spd;
-  RC_msg.data[1] = direct;
-  RC_msg.data[2] = (pulseTimeGear > SWITCH_THRESHOLD)? 1 : 0;
-  RC_msg.data[3] = 0;
-    
-  //Serial.println(spd);
-  pub_RC.publish(&RC_msg);
-  nh.spinOnce();
-  delay(50);
-  
 }

@@ -1,3 +1,5 @@
+# Communication with roboclaws, assigning speeds to the motors M1 and M2, performs control for position of M1
+
 import rospy
 from std_msgs.msg import Float32MultiArray
 import serial
@@ -47,7 +49,7 @@ class Steering:
                 #self.num_ticks = 70.368*self.deg;
                 rospy.loginfo("The Thro value is: %s" % (data.data[1]))
                 
-                steering_calc.calc_all(self.Thro, self.Elev, False);
+                steering_calc.update_values(self.Thro, self.Elev, False);
                 
                 self.spd = steering_calc.velocity_left;
                 self.run(self.motorControllerFL);
@@ -91,7 +93,7 @@ class Steering:
         rcvBR = self.motorControllerBR.port.read(32)
         print(repr(rcvBR))
 
-        steering_calculations = steering_calc(0, 0, False);
+        steering_calculations = SteeringCalc(0, 0, False);
 
         #self.m1EncVal = self.motorController.readM1encoder()[0];
         rospy.init_node(self.node, anonymous=True)
