@@ -10,11 +10,13 @@ from lib.webcam import Webcam, ImageNoneTypeException
 from sensor_msgs.msg import Image
 
 class Camera:
-    def __init__(self, topic = 'video_stream', node = 'camera', camera_id = 1, scale = 0.5):
-        self.webcam = Webcam(scale, camera_id)
+    def __init__(self):
+        self.topic = rospy.get_param('~topic', 'video_stream')
+        self.node = rospy.get_param('~node', 'camera') 
+        self.camera_id = int(rospy.get_param('~camera_id', 0))
+        self.scale = float(rospy.get_param('~scale', 0.5))
+        self.webcam = Webcam(self.scale, self.camera_id)
         self.webcam.start_capture()
-        self.topic = topic
-        self.node = node
         self.bridge = CvBridge()
 
     def start(self):
@@ -43,14 +45,6 @@ class Camera:
         
 if __name__ == '__main__':
     try:
-        args = [1, 0.5, "video_stream", "camera"]
-           
-        for index, arg in enumerate(args):
-            try:
-	        args[index] = sys.argv[index + 1]
-            except: 
-                pass
-            
-        camera = Camera(topic = args[2], node = args[3], camera_id = int(args[0]), scale = float(args[1]))
+        camera = Camera()
         camera.start()
     except rospy.ROSInterruptException: pass

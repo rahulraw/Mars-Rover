@@ -11,10 +11,10 @@ from lib.webcam import Webcam
 from sensor_msgs.msg import Image
 
 class Receiver:
-    def __init__(self, topic = 'video_stream', node = 'receiver'):
+    def __init__(self):
         self.webcam = Webcam()
-        self.topic = topic
-        self.node = node
+        self.topic = rospy.get_param('~topic', 'video_stream')
+        self.node = rospy.get_param('~node', 'receiver')
         self.bridge = CvBridge()
 
     def callback(self, video):
@@ -35,13 +35,5 @@ class Receiver:
         rospy.spin()
         
 if __name__ == '__main__':
-    args = ["video_stream", "receiver"]
-           
-    for index, arg in enumerate(args):
-        try:
-            args[index] = sys.argv[index + 1]
-        except: 
-            pass
-            
-    receiver = Receiver(topic = args[0], node = args[1])
+    receiver = Receiver()
     receiver.start()

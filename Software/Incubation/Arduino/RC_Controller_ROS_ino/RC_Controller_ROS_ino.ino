@@ -1,4 +1,4 @@
-//SERIAL PRINTS DO NOT WORK WITH ROS
+////Serial PRINTS DO NOT WORK WITH ROS
 
 
 #define CHANNEL_1_PIN 2 //Throttle
@@ -62,7 +62,7 @@ char dim0_label[] = "RCValues";
 
 
 void setup() {
-  //ROS Publisher initialization and setup of Float32MultiArray.
+  //ROS Publisher initialization and setup of Int16MultiArray.
   nh.initNode();
   RC_msg.layout.dim = (std_msgs::MultiArrayDimension *)
   malloc(sizeof(std_msgs::MultiArrayDimension) * 1);
@@ -75,37 +75,31 @@ void setup() {
   nh.advertise(pub_RC);
   
   
-  //timer_start = 0;
   attachInterrupt(0, calcThro, CHANGE);
   attachInterrupt(1, calcAile, CHANGE);
   attachInterrupt(2, calcElev, CHANGE);
   attachInterrupt(3, calcRudd, CHANGE);
   attachInterrupt(5, calcGear, CHANGE);
 
-  //Serial.begin(9600);
-
-  //Serial.println("Waiting.......");
-
-  //Serial.println("Start!");
 }
 
 void loop() {
 
 // reading in from the remote control
-  //Serial.print(pulseTimeThro);
+  ////Serial.print(pulseTimeThro);
   if(pulseTimeThro <= 984) // Direction
     pulseTimeThro = 984;
   else if(pulseTimeThro >= 2032)
     pulseTimeThro = 2032;
-  direct = map(pulseTimeThro, 984, 2032, -90, 90); // rc direction stick position in degrees
+  direct = map(pulseTimeThro, 984, 2032, -30, 30); // rc direction stick position in degrees
   if (direct < 3 && direct > -3){
     direct = 0;
   }
-  //Serial.print(" ");
-  //Serial.print(direct);
+  ////Serial.print(" ");
+  ////Serial.print(direct);
   
-  //Serial.print(" ");
-  //Serial.println(pulseTimeElev);
+  ////Serial.print(" ");
+  ////Serial.println(pulseTimeElev);
   if(pulseTimeElev <= 1120)
     pulseTimeElev = 1120;
   else if(pulseTimeElev >= 2000)
@@ -122,11 +116,10 @@ void loop() {
   RC_msg.data[2] = (pulseTimeGear > SWITCH_THRESHOLD)? 1 : 0;
   RC_msg.data[3] = 0;
     
-  ////Serial.println(spd);
+  //////Serial.println(spd);
   pub_RC.publish(&RC_msg);
   nh.spinOnce();
-  delay(50);
-  
+  delay(65);
 }
 
 
@@ -249,3 +242,5 @@ void calcGear()
     }
   }
 }
+
+

@@ -10,73 +10,54 @@ def rad2deg(radians):
 class SteeringCalc:
     def __init__(self, RC_input, velocity, rotate_about, strafe):	
 		#Direction variables		
-        self.RC_input = RC_input*math.pi/180;	#converted to radians
+        self.front_left_angle = 0
+        self.front_right_angle = 0
+        self.back_left_angle = 0
+        self.back_right_angle = 0
         self.chassis_length = 0.512; 
         self.chassis_width = 0.512; 
-        self.origin_to_centre = 0.256/(math.tan(self.RC_input));			
- 
-        self.front_left_angle = rad2deg(math.atan(0.256/(self.origin_to_centre+0.256)));
-        self.front_right_angle = rad2deg(math.atan(0.256/(self.origin_to_centre-0.256)));
-        self.back_left_angle = -self.front_left_angle;
-        self.back_right_angle = -self.front_right_angle;
-
-        self.rotate_about = rotate_about;
-	self.strafe = strafe;
-		
-	#Velocity variables		
-        self.velocity = velocity;
-	self.radius_left = math.sqrt((self.origin_to_centre+0.256)**2+0.256**2);
-        self.radius_right = math.sqrt((self.origin_to_centre-0.256)**2+0.256**2);		
-        
-	self.velocity_left = velocity*(self.radius_left/self.origin_to_centre); #Leftside (FL, BL)
-        self.velocity_right = velocity*(self.radius_right/self.origin_to_centre); #Rightside (FR, BR)
+        self.update_values(RC_input, velocity, rotate_about, strafe)
         		 
 
 
     def turn_onself(self):
-    	self.front_left_angle = 45;
-	self.front_right_angle = -45;
-	self.back_left_angle = -self.front_left_angle;
-	self.back_right_angle = -self.front_right_angle;
-	self.velocity_left = self.velocity;
-	self.velocity_right = -self.velocity;
-
-    def update_values(self, RC_input, velocity, rotate_about, strafe):
-	self.RC_input = RC_input*math.pi/180;	#converted to radians
-        self.origin_to_centre = 0.256/(math.tan(self.RC_input));			
- 
-        self.front_left_angle = rad2deg(math.atan(0.256/(self.origin_to_centre+0.256)));
-        self.front_right_angle = rad2deg(math.atan(0.256/(self.origin_to_centre-0.256)));
+        self.front_left_angle = 45;
+        self.front_right_angle = -45;
         self.back_left_angle = -self.front_left_angle;
         self.back_right_angle = -self.front_right_angle;
+        self.velocity_left = self.velocity;
+        self.velocity_right = -self.velocity;
+
+    def update_values(self, RC_input, velocity, rotate_about, strafe):
+        print (">>>> RX_INPUT ", RC_input) 
+        self.RC_input = RC_input*math.pi/180;	#converted to radians
+        
+        if self.RC_input == 0:
+            self.origin_to_centre = 9999999
+        else:
+            self.origin_to_centre = 0.256/math.tan(self.RC_input)
+
+        if self.RC_input > 0:
+            self.front_right_angle = RC_input
+            self.front_left_angle = rad2deg(math.atan(0.256/(self.origin_to_centre + 2*0.256)));
+        else:
+            self.front_left_angle = RC_input
+            self.front_right_angle = rad2deg(math.atan(0.256/(self.origin_to_centre - 2*0.256)));
+
+        self.back_right_angle = -self.front_right_angle;
+        self.back_left_angle = -self.front_left_angle;
+        print ("front left angle: ", self.front_left_angle)
 
         self.rotate_about = rotate_about;
-	self.strafe = strafe;
+        self.strafe = strafe;
 		
 	#Velocity variables		
         self.velocity = velocity;
-	self.radius_left = math.sqrt((self.origin_to_centre+0.256)**2+0.256**2);
+        self.radius_left = math.sqrt((self.origin_to_centre+0.256)**2+0.256**2);
         self.radius_right = math.sqrt((self.origin_to_centre-0.256)**2+0.256**2);		
         
-	self.velocity_left = velocity*(self.radius_left/self.origin_to_centre); #Leftside (FL, BL)
-        self.velocity_right = velocity*(self.radius_right/self.origin_to_centre); #Rightside (FR, BR)
+        self.velocity_left = velocity*abs((self.radius_left/self.origin_to_centre)); #Leftside (FL, BL)
+        self.velocity_right = velocity*abs((self.radius_right/self.origin_to_centre)); #Rightside (FR, BR)
 
-	if (self.rotate_about):
-	    self.turn_onself()
-		
-
-        print "Original velocity value: %s" % self.velocity;		
-        print "Left wheel velocity value: %s" % self.velocity_left;
-        print "Right wheel velocity value: %s" % self.velocity_right;
-
-        print "";       
-
-        print "Front right wheel angle: %s" % (self.front_right_angle);	
-        print "Back right wheel angle: %s" % (self.back_right_angle);
-        print "Front left wheel angle: %s" % (self.front_left_angle);
-        print "Back left wheel angle: %s" % (self.back_left_angle);
-
-
-
-				
-
+        if (self.rotate_about):
+            self.turn_onself()

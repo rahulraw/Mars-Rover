@@ -233,7 +233,7 @@ class RoboClaw:
             return val
         return -1
 
-    def SetM1pidq(p,i,d,qpps):
+    def SetM1pidq(self,p,i,d,qpps):
         self.sendcommand(128,28)
         self.writelong(d)
         self.writelong(p)
@@ -242,7 +242,7 @@ class RoboClaw:
         self.writebyte(self.checksum&0x7F);
         return;
 
-    def SetM2pidq(p,i,d,qpps):
+    def SetM2pidq(self,p,i,d,qpps):
         self.sendcommand(128,29)
         self.writelong(d)
         self.writelong(p)
@@ -587,3 +587,8 @@ class RoboClaw:
         if crc==self.readbyte()&0x7F:
             return val
         return -1
+
+    def EEPROMSAVE(self):
+	self.sendcommand(128,94)	
+        #self.writebyte(self.checksum&0x7F);
+        return;
