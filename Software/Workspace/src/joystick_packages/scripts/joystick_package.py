@@ -3,22 +3,25 @@
 import rospy
 
 from joystick_packages.msg import JoystickMsg
+from std_msgs.msg import Int16MultiArray
 
 class Joystick:
     def __init__(self):
         self.topic = rospy.get_param('~topic', 'input_stream')
         self.node = rospy.get_param('~node', 'joystick') 
-        self.pipe = open(rospy.get_param('~input_id', '/dev/input/js0'), 'r')
+        self.pipe = open(rospy.get_param('~input_id', '/dev/input/js1'), 'r')
 
     def start(self):
         rospy.init_node(self.node, anonymous = True)
-        self.pub = rospy.Publisher(self.topic, JoystickMsg, queue_size = 10)
-
+        self.pub = rospy.Publisher(self.topic, Int16MultiArray, queue_size = 10)
+        joy_msg = Int16MultiArray()
+        joy_msg.data = [0] * 4
         msg = []
+        killswitch = 0
         while not rospy.is_shutdown():
             for char in self.pipe.read(1):
                 msg += [ord(char)]
-
+                
                 if len(msg) == 8:
                     joystick_message = JoystickMsg()
                     joystick_message.type = msg[6]
@@ -26,6 +29,15 @@ class Joystick:
 
                     if joystick_message.type == 1:
                         joystick_message.value = msg[4]
+
+                        if joystick_message.number == 7:
+                            joy_msg.data[3] = joystick_message.value 
+
+                        if joystick_message.number == 9:
+                            killswitch += 1
+                            if killswitch == 2:
+                                killswitch = 0
+                                joy_msg.data[2] = 1 - joy_msg.data[2]
 
                     elif joystick_message.type == 2:
 
@@ -42,11 +54,17 @@ class Joystick:
                         # if axis is odd.
                         if joystick_message.number % 2:
                             joystick_message.value *= -1
-
+ 
                         joystick_message.value = int(joystick_message.value * 90 / 127)
-                    
+                        
+                        if joystick_message.number == 0:
+                            joy_msg.data[0] = joystick_message.value
+                       
+                        elif joystick_message.number == 3:
+                            joy_msg.data[1] = joystick_message.value
+
                     # Publish message
-                    self.pub.publish(joystick_message)
+                    self.pub.publish(joy_msg)
                     msg = []
         
 if __name__ == '__main__':
