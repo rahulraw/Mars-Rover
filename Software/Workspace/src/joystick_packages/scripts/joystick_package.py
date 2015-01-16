@@ -10,6 +10,7 @@ class Joystick:
         self.topic = rospy.get_param('~topic', 'RCValues')
         self.node = rospy.get_param('~node', 'joystick') 
         self.pipe = open(rospy.get_param('~input_id', '/dev/input/js1'), 'r')
+        self.pconstant = 0.2
 
     def start(self):
         rospy.init_node(self.node, anonymous = True)
@@ -72,11 +73,10 @@ class Joystick:
                         elif joystick_message.number == 5:
                             throttle_value = joystick_message.value
                            
-                        if (throttle_value == 90):
-                            joy_msg.data[0] = min(90, joy_msg.data[0] + 3)
-                        elif (throttle_value == -90):
-                            joy_msg.data[0] = max(-90, joy_msg.data[0] - 3)
-                        elif (throttle_value == 0):
+                        joy_msg.data[0] = min(90, joy_msg.data[0] + (self.pconstant * throttle _value))
+                        joy_msg.data[0] = max(-90, joy_msg.data[0] - (self.pconstant * throttle _value))
+                        
+                        if (throttle_value == 0):
                             joy_msg.data[0] = 0
 
 
