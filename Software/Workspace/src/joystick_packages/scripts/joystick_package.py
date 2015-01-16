@@ -72,11 +72,14 @@ class Joystick:
 
                         elif joystick_message.number == 5:
                             throttle_value = joystick_message.value
-                           
-                        joy_msg.data[0] = min(90, joy_msg.data[0] + (self.pconstant * throttle _value))
-                        joy_msg.data[0] = max(-90, joy_msg.data[0] - (self.pconstant * throttle _value))
                         
-                        if (throttle_value == 0):
+                        if throttle_value > 0:   
+                            joy_msg.data[0] = min(90, joy_msg.data[0] + (self.pconstant * throttle _value))
+                        
+                        elif throttle_value < 0:
+                            joy_msg.data[0] = max(-90, joy_msg.data[0] - (self.pconstant * throttle _value))
+                        
+                        elif (throttle_value == 0):
                             joy_msg.data[0] = 0
 
 
