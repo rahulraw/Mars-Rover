@@ -74,13 +74,16 @@ class Joystick:
                             throttle_value = joystick_message.value
                         
                         if throttle_value > 0:   
+                            self.pconstant = self.pconstant/1.1
                             joy_msg.data[0] = min(90, joy_msg.data[0] + (self.pconstant * throttle _value))
                         
                         elif throttle_value < 0:
                             joy_msg.data[0] = max(-90, joy_msg.data[0] - (self.pconstant * throttle _value))
+                            self.pconstant = self.pconstant/1.1
                         
                         elif (throttle_value == 0):
                             joy_msg.data[0] = 0
+                            self.pconstant = 0.2
 
 
                     # Publish message
