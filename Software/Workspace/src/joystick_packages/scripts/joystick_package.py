@@ -7,7 +7,7 @@ from std_msgs.msg import Int16MultiArray
 
 class Joystick:
     def __init__(self):
-        self.topic = rospy.get_param('~topic', 'input_stream')
+        self.topic = rospy.get_param('~topic', 'RCValues')
         self.node = rospy.get_param('~node', 'joystick') 
         self.pipe = open(rospy.get_param('~input_id', '/dev/input/js1'), 'r')
 
@@ -16,6 +16,9 @@ class Joystick:
         self.pub = rospy.Publisher(self.topic, Int16MultiArray, queue_size = 10)
         joy_msg = Int16MultiArray()
         joy_msg.data = [0] * 4
+
+        throttle_value = 0;
+
         msg = []
         killswitch = 0
         while not rospy.is_shutdown():
@@ -57,11 +60,25 @@ class Joystick:
  
                         joystick_message.value = int(joystick_message.value * 90 / 127)
                         
+                        print(joystick_message.number)
+                        print(joystick_message.value)
                         if joystick_message.number == 0:
-                            joy_msg.data[0] = joystick_message.value
+                            # joy_msg.data[0] = joystick_message.value
+                            pass
                        
                         elif joystick_message.number == 3:
                             joy_msg.data[1] = joystick_message.value
+
+                        elif joystick_message.number == 5:
+                            throttle_value = joystick_message.value
+                           
+                        if (throttle_value == 90):
+                            joy_msg.data[0] = min(90, joy_msg.data[0] + 3)
+                        elif (throttle_value == -90):
+                            joy_msg.data[0] = max(-90, joy_msg.data[0] - 3)
+                        elif (throttle_value == 0):
+                            joy_msg.data[0] = 0
+
 
                     # Publish message
                     self.pub.publish(joy_msg)
