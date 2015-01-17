@@ -46,6 +46,10 @@ int jrkGetTarget(int fd)
 {
   return jrkGetVariable(fd, 0xA3);
 }
+
+int jrkGetErrorFlagsHalting(int fd){
+  return jrkGetVariable(fd, 0xB3);
+}
  
 // Sets the jrk's Target variable (0-4095).
 int jrkSetTarget(int fd, unsigned short target)
@@ -62,8 +66,8 @@ int jrkSetTarget(int fd, unsigned short target)
 int main()
 {
   // Open the Jrk's virtual COM port.
-  const char * device = "\\\\.\\USBSER000";  // Windows, "\\\\.\\COM6" also works
-  //const char * device = "/dev/ttyACM0";  // Linux
+  //const char * device = "\\\\.\\USBSER000";  // Windows, "\\\\.\\COM6" also works
+  const char * device = "/dev/ttyACM0";  // Linux
   //const char * device = "/dev/cu.usbmodem00000041"; // Mac OS X
   int fd = open(device, O_RDWR | O_NOCTTY);
   if (fd == -1)
@@ -79,6 +83,8 @@ int main()
   options.c_oflag &= ~(ONLCR | OCRNL);
   tcsetattr(fd, TCSANOW, &options);
 #endif
+
+  jrkGetErrorFlagsHalting(fd);
    
   int feedback = jrkGetFeedback(fd);
   printf("Current Feedback is %d.\n", feedback); 

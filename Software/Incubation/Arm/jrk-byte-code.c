@@ -46,6 +46,11 @@ int jrkGetTarget(int fd)
 {
   return jrkGetVariable(fd, 0xA3);
 }
+
+//Get the errors and clear them
+int jrkGetErrorFlagsHalting(int fd){
+  return jrkGetVariable(fd, 0xB3);
+}
  
 // Sets the jrk's Target variable (0-4095).
 int jrkSetTarget(int fd, unsigned short target)
@@ -79,6 +84,8 @@ int main()
   options.c_oflag &= ~(ONLCR | OCRNL);
   tcsetattr(fd, TCSANOW, &options);
 #endif
+
+  jrkGetErrorFlagsHalting(fd);
    
   int feedback = jrkGetFeedback(fd);
   printf("Current Feedback is %d.\n", feedback); 
