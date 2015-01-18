@@ -6,7 +6,7 @@ import time
 import math
 import traceback
 from roboclaw import RoboClaw
-from steering_code_updated import SteeringCalc
+from steering_code import SteeringCalc
 
 ## Testing ROS communication with Roboclaw ##
 
@@ -31,10 +31,10 @@ class Steering:
         self.ErrThres = 500
         self.running = True
 
-        self.motorControllerFL = RoboClaw("/dev/RoboClawFL")
-        self.motorControllerFR = RoboClaw("/dev/RoboClawFR")
-        self.motorControllerBL = RoboClaw("/dev/RoboClawBL")
-        self.motorControllerBR = RoboClaw("/dev/RoboClawBR")
+        self.motorControllerFL = RoboClaw("/dev/roboclawfl")
+        self.motorControllerFR = RoboClaw("/dev/roboclawfr")
+        self.motorControllerBL = RoboClaw("/dev/roboclawbl")
+        self.motorControllerBR = RoboClaw("/dev/roboclawbr")
 
     def callback(self, data):
         try:
