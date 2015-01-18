@@ -31,7 +31,7 @@ class Steering:
 
         rospy.init_node(self.node, anonymous=True)
         rospy.Subscriber(self.topic, Int16MultiArray, self.callback)
-        self.rate = rospy.Rate(20)
+        self.rate = rospy.Rate(10)
 
     def callback(self, data):
         try:
@@ -41,8 +41,8 @@ class Steering:
                 elev = data.data[0] 
                 thro = data.data[1]
                 
-                rospy.loginfo("The Thro value is: %s" % (thro))
-                rospy.loginfo("The Elev value is: %s" % (elev)
+                # rospy.loginfo("The Thro value is: %s" % (thro))
+                # rospy.loginfo("The Elev value is: %s" % (elev))
 
                 self.steering_calc.update_values(thro, elev)
 
@@ -68,9 +68,12 @@ class Steering:
         rcvBR = self.motorControllerBR.port.read(32)
         print(repr(rcvBR))
 
-        while not rospy.is_shutdown():
-            rospy.spinOnce()
+        self.motorControllerFL.ResetEncoderCnts()
+        self.motorControllerFR.ResetEncoderCnts()
+        self.motorControllerBL.ResetEncoderCnts()
+        self.motorControllerBR.ResetEncoderCnts()
 
+        while not rospy.is_shutdown():
             self.run(self.motorControllerFL, self.steering_calc.velocity_left)
             self.run(self.motorControllerBL, self.steering_calc.velocity_left)
             self.run(self.motorControllerFR, self.steering_calc.velocity_right)
@@ -84,7 +87,6 @@ class Steering:
             self.rate.sleep()
 
     def run(self, motor_controller, target_speed):
-        self.safetyConstant = 0.5
         speed = int(self.SafetyConstant * abs(target_speed))
         forward_speed = speed if target_speed > 10 else 0
         backward_speed = speed if target_speed < -10 else 0
@@ -103,9 +105,8 @@ class Steering:
     def rotate(self, motor_controller, num_ticks):
        m1_encoder_value = self.__convert_True_to_Mod__(motor_controller.readM1encoder()[0])
        error = num_ticks - m1_encoder_value
-       integral += error
 
-       motorValue = max(-20, min(20, int((error) * self.proportionalConstant + self.integralConstant * integral)))
+       motorValue = max(-20, min(20, int((error) * self.proportionalConstant)))
        if abs(error) <= self.errorThres or num_ticks > 180 * 70.368:
            motorValue = 0
 
