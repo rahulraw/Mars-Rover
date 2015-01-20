@@ -62,8 +62,7 @@ int jrkSetTarget(int fd, unsigned short target)
     return -1;
   }
   return 0;
-}
- 
+} 
 int main()
 {
   // Open the Jrk's virtual COM port.
@@ -76,7 +75,7 @@ int main()
     perror(device);
     return 1;
   }
- 
+
 #ifndef _WIN32
   struct termios options;
   tcgetattr(fd, &options);
