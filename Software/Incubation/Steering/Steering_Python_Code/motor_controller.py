@@ -6,200 +6,183 @@ import time
 import math
 import traceback
 from roboclaw import RoboClaw
-from steering_code import SteeringCalc
+from steering_calc import SteeringCalc
 
 ## Testing ROS communication with Roboclaw ##
 
 class Steering:
-    def __init__(self,topic = 'RCValues', node = 'RoboClaw'):
-        self.topic = topic;
-        self.node = node;
-        self.Thro = 0;
-        self.Elev = 0;
+    def __init__(self, topic = 'RCValues', node = 'RoboClaw'):
+        self.topic = topic
+        self.node = node
 
-    ## drive variables ##
-        self.spd = 0;
-        self.SafetyConstant = 0.5
-        self.running = True
+        ## drive variables ##
+        self.SafetyConstant = 0.07
 
-    ## rotation variables ##
-        self.deg = 0;
-        self.num_ticks = 70.368*self.deg
-        self.m1EncVal = 0;
+        ## rotation variables ##
         self.proportionalConstant = 0.014
-        self.integralConstant = 0
-        self.ErrThres = 500
-        self.running = True
+        self.integralConstant = 0.0
+        self.errorThres = 35
+        self.steering_calc = SteeringCalc(0, 0)
+        self.min_battery = 120
+        self.speed = 0
+        self.integral = 0
+        self.killswitch = 1
 
         self.motorControllerFL = RoboClaw("/dev/roboclawfl")
         self.motorControllerFR = RoboClaw("/dev/roboclawfr")
         self.motorControllerBL = RoboClaw("/dev/roboclawbl")
         self.motorControllerBR = RoboClaw("/dev/roboclawbr")
 
-    def callback(self, data):
-        try:
-            if data.data[2]:
-                self.stop()
-            else:
-                
-                self.Elev =  data.data[0] 
-                rospy.loginfo("The Elev value is: %s" % (data.data[1]))
-                self.Thro = data.data[1]
-                rospy.loginfo("The Thro value is: %s" % (data.data[1]))
-                
-                self.steering_calc.update_values(self.Thro, self.Elev, False, False)
-
-                self.spd = self.steering_calc.velocity_left
-                self.run(self.motorControllerFL)
-                self.run(self.motorControllerBL)
-                self.spd = self.steering_calc.velocity_right
-                self.run(self.motorControllerFR)
-                self.run(self.motorControllerBR)           
-
-                self.deg = self.steering_calc.front_left_angle
-                self.num_ticks = 70.368*self.deg
-                print('\nFront Left:')
-                self.rotate(self.motorControllerFL, True)
-
-                self.deg = self.steering_calc.front_right_angle;
-                self.num_ticks = 70.368*self.deg;
-               
-                print('\nFront Right:')
-                self.rotate(self.motorControllerFR, True);
-
-                self.deg = self.steering_calc.back_left_angle;
-                self.num_ticks = 70.368*self.deg;
-                print('\nBack Left:')
-                self.rotate(self.motorControllerBL, True)
-
-                self.deg = self.steering_calc.back_right_angle
-                self.num_ticks = 70.368*self.deg;
-                print('\nBack Right:')
-                self.rotate(self.motorControllerBR,True)
-
-        except:
-            traceback.print_exc()
-            rospy.loginfo("There has been an error")
-
-    def start(self):
-        self.motorControllerFL.sendcommand(128,21);
-        self.motorControllerFR.sendcommand(128,21);
-        self.motorControllerBL.sendcommand(128,21);
-        self.motorControllerBR.sendcommand(128,21);
-
-        rcvFL = self.motorControllerFL.port.read(32)
-        print(repr(rcvFL))
-        rcvFR = self.motorControllerFR.port.read(32)
-        print(repr(rcvFR))
-        rcvBL = self.motorControllerBL.port.read(32)
-        print(repr(rcvBL))
-        rcvBR = self.motorControllerBR.port.read(32)
-        print(repr(rcvBR))
-
-        self.steering_calc = SteeringCalc(0, 0, False, False);
-
         rospy.init_node(self.node, anonymous=True)
         rospy.Subscriber(self.topic, Int16MultiArray, self.callback)
-        rospy.spin()
+        self.rate = rospy.Rate(5)
 
-    def run(self, motorController):
-        self.safetyConstant= 0.5;
+    def callback(self, data):
+        self.killswitch = data.data[2]
+        if not self.killswitch:
+            elev = data.data[0] 
+            thro = data.data[1]
+            self.steering_calc.update_values(thro, elev)
 
-        if (self.spd > 10):
-            motorController.M2Forward(int(self.SafetyConstant*abs(self.spd)));
+    def start(self):
+        # while not rospy.is_shutdown():
+        #     rospy.spin()
+        #     self.rate.sleep()
+        print(repr(self.motorControllerFL.readversion()))
+        print(repr(self.motorControllerFR.readversion()))
+        print(repr(self.motorControllerBL.readversion()))
+        print(repr(self.motorControllerBR.readversion()))
 
-        elif (self.spd < -10):
-            motorController.M2Backward(int(self.SafetyConstant*abs(self.spd)));
-        else:
-            motorController.M2Forward(0);
-            motorController.M2Backward(0);
-        return
+        self.motorControllerFL.ResetEncoderCnts()
+        self.motorControllerFR.ResetEncoderCnts()
+        self.motorControllerBL.ResetEncoderCnts()
+        self.motorControllerBR.ResetEncoderCnts()
+
+        while not rospy.is_shutdown():
+            if not self.killswitch and self.check_batteries():
+                self.run(self.motorControllerFL, self.steering_calc.velocity_left)
+                self.run(self.motorControllerBL, self.steering_calc.velocity_left)
+                self.run(self.motorControllerFR, self.steering_calc.velocity_right)
+                self.run(self.motorControllerBR, self.steering_calc.velocity_right)
+
+                self.rotate(self.motorControllerFL, self.steering_calc.front_left_angle * 70.368, 1)
+                self.rotate(self.motorControllerFR, self.steering_calc.front_right_angle * 70.368, 2)
+                self.rotate(self.motorControllerBL, self.steering_calc.back_left_angle * 70.368, 3)
+                self.rotate(self.motorControllerBR, self.steering_calc.back_right_angle * 70.368, 4)
+            else:
+                try:
+                    print("FL encoder: ", self.__convert_True_to_Mod__(self.motorControllerFL.readM1encoder()[0]))
+                    print("FL target: ", self.steering_calc.front_left_angle * 70.368)
+                    print("FL main battery: ", self.motorControllerFL.readmainbattery())
+                    print("BL encoder: ", self.__convert_True_to_Mod__(self.motorControllerBL.readM1encoder()[0]))
+                    print("BL target: ", self.steering_calc.back_left_angle * 70.368)
+                    print("BL main battery: ", self.motorControllerBL.readmainbattery())
+                    print("FR encoder: ", self.__convert_True_to_Mod__(self.motorControllerFR.readM1encoder()[0]))
+                    print("FR target: ", self.steering_calc.front_right_angle * 70.368)
+                    print("FR main battery: ", self.motorControllerFR.readmainbattery())
+                    print("BR encoder: ", self.__convert_True_to_Mod__(self.motorControllerBR.readM1encoder()[0]))
+                    print("BR target: ", self.steering_calc.back_right_angle * 70.368)
+                    print("BR main battery: ", self.motorControllerBR.readmainbattery())
+                except:
+                    pass
+
+                self.stop_run()
+                self.stop_rotate()
+        
+            self.rate.sleep()
+
+        self.stop_run()
+        self.stop_rotate()
+        self.motorControllerFL.ResetEncoderCnts()
+        self.motorControllerFR.ResetEncoderCnts()
+        self.motorControllerBL.ResetEncoderCnts()
+        self.motorControllerBR.ResetEncoderCnts()
+
+    def run(self, motor_controller, target_speed):
+        try:
+            self.speed += int((target_speed - self.speed) * self.SafetyConstant)
+            motorValue = self.speed
+            if self.speed > 10:
+                motor_controller.M2Forward(motorValue)
+            elif self.speed < -10:
+                motor_controller.M2Backward(abs(motorValue))
+            else:
+                motor_controller.M2Forward(0)
+                motor_controller.M2Backward(0)
+        except:
+            self.stop_run()
+            rospy.loginfo("Failure in run")
+            traceback.print_exc()
+
+    def check_batteries(self):
+        try:
+            return self.motorControllerFL.readmainbattery() > self.min_battery and self.motorControllerBL.readmainbattery() > self.min_battery and self.motorControllerFR.readmainbattery() > self.min_battery and self.motorControllerBR.readmainbattery() > self.min_battery
+        except:
+            return True
 
     # Converts encoder value to valid ticks.
     def __convert_True_to_Mod__(self, ticks):
         if ticks > 2**31:
-            return ticks - 2**32;
+            return ticks - 2**32
         else:
-            return ticks;
+            return ticks
 
-    #True Position: Tick value that ranges between 0 and 4 billion.
-    #Mod Position: Tick value that ranges between -90*70.368 and +90.368*70.368.
-    def rotate(self, motorController, to_print):
-       if to_print:
-           print ("True self.m1EncVal: ", motorController.readM1encoder()[0]) 
-       self.m1EncVal = self.__convert_True_to_Mod__(motorController.readM1encoder()[0]);
-       if to_print:
-           print ("Mod self.m1EncVal: ", self.m1EncVal) 
-       Err = self.num_ticks - self.m1EncVal;
-       if to_print:
-           print ("Desired Ticks Position:  ", self.num_ticks)	
-           print('New Position Error: ', Err);
-       Reset = Err
+    # True Position: Tick value that ranges between 0 and 4 billion.
+    # Mod Position: Tick value that ranges between -90*70.368 and +90*70.368.
+    def rotate(self, motor_controller, num_ticks, motor_controller_index = 0):
+        try:
+            m1_encoder_value = self.__convert_True_to_Mod__(motor_controller.readM1encoder()[0])
+            error = num_ticks - m1_encoder_value
+            self.integral = self.integral + error
+            motorValue = max(-20, min(20, int((error) * self.proportionalConstant + self.integral * self.integralConstant)))
 
-       if Err >= self.ErrThres:
-           #if to_print:
-               #print('Position of Motor1: ', self.m1EncVal)
-          motorValue = min(30, int((Err)*self.proportionalConstant + self.integralConstant*Reset))
+            if (motor_controller_index == -2):
+                print("Error: ", error)
+                print("Target: ", num_ticks)
+                print("Encoder: ", m1_encoder_value)
+                print("Integral: ", self.integral)
+                print("Motor Value: ", motorValue)
 
-       elif Err <= -self.ErrThres:
-           #if to_print:
-               #print('Position of Motor1: ', self.m1EncVal)
-           motorValue = max(-30, int((Err)*self.proportionalConstant + self.integralConstant*Reset))
-       else:
-           if to_print:
-               print("Error within threshold at: ", self.m1EncVal)
-           motorValue = 0
-           time.sleep(0)
+            if abs(error) <= self.errorThres or num_ticks > 180 * 70.368:
+               motorValue = 0
 
-        #Error Checking
-       if self.num_ticks > 180*(70.368):
-           motorValue = 0;
+            thresholdedMotorValue = 0 if abs(motorValue) < 4 else max(8, abs(motorValue))
+            if motorValue > 0:
+                motor_controller.M1Forward(thresholdedMotorValue)
+            else:
+                motor_controller.M1Backward(thresholdedMotorValue)
+        except:
+            self.stop_rotate()
+            rospy.loginfo("Failure in rotate")
+            traceback.print_exc()
 
-       #if abs(self.m1EncVal) > 100*70.368:
-           #print "Error, 100deg or -100deg position reached";
-           #motorValue = 0;
-
-	#motor speed assignment
-       if motorValue > 0:
-            motorController.M1Forward(motorValue)
-       else:
-            motorController.M1Backward(abs(motorValue))
-       print('Motor Value: ', motorValue)
-       return
-
-    def stop(self):
+    def stop_run(self):
+        rospy.loginfo("Stopped running")
+        self.speed = 0
         self.motorControllerFL.M1Forward(0)
         self.motorControllerBL.M1Forward(0)
         self.motorControllerFR.M1Forward(0)
         self.motorControllerBR.M1Forward(0)
 
+    def stop_rotate(self):
+        rospy.loginfo("Stopped rotating")
         self.motorControllerFL.M2Forward(0)
         self.motorControllerBL.M2Forward(0)
         self.motorControllerFR.M2Forward(0)
         self.motorControllerBR.M2Forward(0)
 
-        self.motorControllerFL.ResetEncoderCnts()
-        self.motorControllerBL.ResetEncoderCnts()
-        self.motorControllerFR.ResetEncoderCnts()
-        self.motorControllerBR.ResetEncoderCnts()
+    def strafe(self, RC_input, velocity):    
+        target_ticks = RC_input * 70.368
+        self.rotate(self.MotorControllerFL, target_ticks)
+        self.rotate(self.MotorControllerFR, target_ticks)
+        self.rotate(self.MotorControllerBL, target_ticks)
+        self.rotate(self.MotorControllerBR, target_ticks)
 
-
-
-    def strafe(RC_input, velocity):    
-        #Move wheels to same angle.
-        self.deg = RC_input
-        rotate(self.MotorControllerFL)
-        rotate(self.MotorControllerFR)
-        rotate(self.MotorControllerBL)
-        rotate(self.MotorControllerBR)
-
-        #Drive wheels at same speed.
-        self.spd = velocity
-        run(self.MotorControllerFL)
-        run(self.MotorControllerFR)
-        run(self.MotorControllerFL)
-        run(self.MotorControllerBR)
-
+        target_speed = velocity
+        self.run(self.MotorControllerFL, target_speed)
+        self.run(self.MotorControllerFR, target_speed)
+        self.run(self.MotorControllerFL, target_speed)
+        self.run(self.MotorControllerBR, target_speed)
 
     def startup():
         #Move BR & FR negative theta (M1Backward) until mag. proximity sensor.
@@ -211,7 +194,7 @@ class Steering:
             #FL: num_ticks = 90*(70.368), M1Backwar
 
         if self.alignedBR and self.alignedFR and self.alignedBL and self.alignedBR:
-            ticksTo90 = 90*70.368;
+            ticksTo90 = 90*70.368
             self.motorControllerBR.M1Forward(ticksto90)
             self.motorControllerFR.M1Backward(ticksto90)
             self.motorControllerBL.M1Forward(ticksto90)

@@ -1,0 +1,8 @@
+prefix=/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install
+
+Name: rosserial_server
+Description: Description of rosserial_server
+Version: 0.6.3
+Cflags: -I/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install/include
+Libs: -L/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install/lib 
+Requires: roscpp rosserial_msgs topic_tools
