@@ -1,0 +1,8 @@
+prefix=/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install
+
+Name: joystick_packages
+Description: Description of joystick_packages
+Version: 0.0.0
+Cflags: -I/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install/include
+Libs: -L/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install/lib 
+Requires: message_runtime roscpp rospy std_msgs

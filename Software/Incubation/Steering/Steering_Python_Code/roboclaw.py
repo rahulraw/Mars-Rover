@@ -48,7 +48,7 @@ class RoboClaw:
         return val[0]
 
     def readslong(self):
-        val = struct.unpack('>l',self.port.read(4))
+        val = struct.unpack('>l', self.port.read(4))
         self.checksum += val[0]
         self.checksum += (val[0]>>8)&0xFF
         self.checksum += (val[0]>>16)&0xFF
