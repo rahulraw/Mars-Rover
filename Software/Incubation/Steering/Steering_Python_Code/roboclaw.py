@@ -10,6 +10,10 @@ class RoboClaw:
         self.checksum = 0
         self.port = serial.Serial(deviceId, baudrate=38400, timeout=1)
 
+    def reconnect(self):
+        self.port.close()
+        self.port = serial.Serial(deviceId, baudrate=38400, timeout=1)
+
     def sendcommand(self, address,command):
         self.checksum = address
         self.port.write(chr(address))

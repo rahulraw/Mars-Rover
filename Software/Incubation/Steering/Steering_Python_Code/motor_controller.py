@@ -1,5 +1,5 @@
 import rospy
-from std_msgs.msg import Int16MultiArray
+from joystick_packages.msg import JoystickMsg
 import serial
 import struct
 import time
@@ -23,10 +23,11 @@ class Steering:
         self.integralConstant = 0.0
         self.errorThres = 35
         self.steering_calc = SteeringCalc(0, 0)
-        self.min_battery = 120
+        self.min_battery = 11.9
         self.speed = 0
+        self.mode = 0
         self.integral = 0
-        self.killswitch = 1
+        self.joystick = JoystickMsg()
 
         self.motorControllerFL = RoboClaw("/dev/roboclawfl")
         self.motorControllerFR = RoboClaw("/dev/roboclawfr")
@@ -34,24 +35,23 @@ class Steering:
         self.motorControllerBR = RoboClaw("/dev/roboclawbr")
 
         rospy.init_node(self.node, anonymous=True)
-        rospy.Subscriber(self.topic, Int16MultiArray, self.callback)
+        rospy.Subscriber(self.topic, JoystickMsg, self.callback)
         self.rate = rospy.Rate(5)
 
     def callback(self, data):
-        self.killswitch = data.data[2]
-        if not self.killswitch:
-            elev = data.data[0] 
-            thro = data.data[1]
-            self.steering_calc.update_values(thro, elev)
+        self.joystick = data
+        self.mode = (self.joystick.right_bumper - self.joystick.left_bumper) % 3
+        if not self.joystick.killswitch:
+            self.steering_calc.update_values(data.right_joy_x, data.left_joy_y)
 
     def start(self):
         # while not rospy.is_shutdown():
         #     rospy.spin()
         #     self.rate.sleep()
-        print(repr(self.motorControllerFL.readversion()))
-        print(repr(self.motorControllerFR.readversion()))
-        print(repr(self.motorControllerBL.readversion()))
-        print(repr(self.motorControllerBR.readversion()))
+        # print(repr(self.motorControllerFL.readversion()))
+        # print(repr(self.motorControllerFR.readversion()))
+        # print(repr(self.motorControllerBL.readversion()))
+        # print(repr(self.motorControllerBR.readversion()))
 
         self.motorControllerFL.ResetEncoderCnts()
         self.motorControllerFR.ResetEncoderCnts()
@@ -59,7 +59,7 @@ class Steering:
         self.motorControllerBR.ResetEncoderCnts()
 
         while not rospy.is_shutdown():
-            if not self.killswitch and self.check_batteries():
+            if not self.joystick.killswitch and self.check_batteries():
                 self.run(self.motorControllerFL, self.steering_calc.velocity_left)
                 self.run(self.motorControllerBL, self.steering_calc.velocity_left)
                 self.run(self.motorControllerFR, self.steering_calc.velocity_right)
@@ -69,23 +69,27 @@ class Steering:
                 self.rotate(self.motorControllerFR, self.steering_calc.front_right_angle * 70.368, 2)
                 self.rotate(self.motorControllerBL, self.steering_calc.back_left_angle * 70.368, 3)
                 self.rotate(self.motorControllerBR, self.steering_calc.back_right_angle * 70.368, 4)
-            else:
+
                 try:
-                    print("FL encoder: ", self.__convert_True_to_Mod__(self.motorControllerFL.readM1encoder()[0]))
-                    print("FL target: ", self.steering_calc.front_left_angle * 70.368)
-                    print("FL main battery: ", self.motorControllerFL.readmainbattery())
-                    print("BL encoder: ", self.__convert_True_to_Mod__(self.motorControllerBL.readM1encoder()[0]))
-                    print("BL target: ", self.steering_calc.back_left_angle * 70.368)
-                    print("BL main battery: ", self.motorControllerBL.readmainbattery())
-                    print("FR encoder: ", self.__convert_True_to_Mod__(self.motorControllerFR.readM1encoder()[0]))
-                    print("FR target: ", self.steering_calc.front_right_angle * 70.368)
-                    print("FR main battery: ", self.motorControllerFR.readmainbattery())
-                    print("BR encoder: ", self.__convert_True_to_Mod__(self.motorControllerBR.readM1encoder()[0]))
-                    print("BR target: ", self.steering_calc.back_right_angle * 70.368)
-                    print("BR main battery: ", self.motorControllerBR.readmainbattery())
+                    if self.joystick.square:
+                        print("FL encoder: ", self.__convert_True_to_Mod__(self.motorControllerFL.readM1encoder()[0]))
+                        print("FL target: ", self.steering_calc.front_left_angle * 70.368)
+                        print("FL main battery: ", self.motorControllerFL.readmainbattery())
+                    if self.joystick.triangle:
+                        print("FR encoder: ", self.__convert_True_to_Mod__(self.motorControllerFR.readM1encoder()[0]))
+                        print("FR target: ", self.steering_calc.front_right_angle * 70.368)
+                        print("FR main battery: ", self.motorControllerFR.readmainbattery())
+                    if self.joystick.circle:
+                        print("BR encoder: ", self.__convert_True_to_Mod__(self.motorControllerBR.readM1encoder()[0]))
+                        print("BR target: ", self.steering_calc.back_right_angle * 70.368)
+                        print("BR main battery: ", self.motorControllerBR.readmainbattery())
+                    if self.joystick.x:
+                        print("BL encoder: ", self.__convert_True_to_Mod__(self.motorControllerBL.readM1encoder()[0]))
+                        print("BL target: ", self.steering_calc.back_left_angle * 70.368)
+                        print("BL main battery: ", self.motorControllerBL.readmainbattery())
                 except:
                     pass
-
+            else:
                 self.stop_run()
                 self.stop_rotate()
         
