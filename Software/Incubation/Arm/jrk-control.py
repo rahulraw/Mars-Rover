@@ -61,13 +61,16 @@ def jrkGetErrorFlagsHalting(port):
 def main():
     port = serial.Serial("/dev/ttyACM0", baudrate=9600, timeout=1)
 
-    target = 1000
+    jrkGetErrorFlagsHalting(port)
+
+    target = 200
 
     print(jrkGetTarget(port))
     print(jrkSetTarget(port, target))
 
     feedback = jrkGetFeedBack(port)
     while(feedback != target):
+        jrkSetTarget(port, target)
         feedback = jrkGetFeedBack(port)
         print(feedback)
         time.sleep(0.25)
