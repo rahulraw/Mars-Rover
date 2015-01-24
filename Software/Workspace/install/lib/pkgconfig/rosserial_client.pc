@@ -1,0 +1,8 @@
+prefix=/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install
+
+Name: rosserial_client
+Description: Description of rosserial_client
+Version: 0.6.3
+Cflags: 
+Libs: -L/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install/lib 
+Requires: 

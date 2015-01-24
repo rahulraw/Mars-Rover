@@ -18,7 +18,7 @@ class Joystick:
         joy_msg = Int16MultiArray()
         joy_msg.data = [0] * 4
 
-        throttle_value = 0;
+        break_value = 0
 
         msg = []
         killswitch = 0
@@ -37,12 +37,14 @@ class Joystick:
                         if joystick_message.number == 7:
                             joy_msg.data[3] = joystick_message.value 
 
+                        if joystick_message.number == 6:
+                            break_value = joystick_message.value 
+
                         if joystick_message.number == 9:
                             killswitch += 1
                             if killswitch == 2:
                                 killswitch = 0
                                 joy_msg.data[2] = 1 - joy_msg.data[2]
-
                     elif joystick_message.type == 2:
 
                         joystick_message.value = msg[5]
@@ -61,30 +63,17 @@ class Joystick:
  
                         joystick_message.value = int(joystick_message.value * 90 / 127)
                         
-                        print(joystick_message.number)
-                        print(joystick_message.value)
-                        if joystick_message.number == 0:
-                            # joy_msg.data[0] = joystick_message.value
-                            pass
+                        if joystick_message.number == 1 and not break_value:
+                            joy_msg.data[0] = joystick_message.value
                        
-                        elif joystick_message.number == 3:
+                        elif joystick_message.number == 2:
                             joy_msg.data[1] = joystick_message.value
 
                         elif joystick_message.number == 5:
                             throttle_value = joystick_message.value
-                        
-                        if throttle_value > 0:   
-                            self.pconstant = self.pconstant/1.1
-                            joy_msg.data[0] = min(90, joy_msg.data[0] + (self.pconstant * throttle _value))
-                        
-                        elif throttle_value < 0:
-                            joy_msg.data[0] = max(-90, joy_msg.data[0] - (self.pconstant * throttle _value))
-                            self.pconstant = self.pconstant/1.1
-                        
-                        elif (throttle_value == 0):
-                            joy_msg.data[0] = 0
-                            self.pconstant = 0.2
 
+                        if (break_value):
+                            joy_msg.data[0] /= 1.05
 
                     # Publish message
                     self.pub.publish(joy_msg)
