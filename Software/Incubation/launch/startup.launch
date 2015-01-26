@@ -1,0 +1,6 @@
+<launch>
+
+<node name="joystick" pkg="Workspace" type="/joystick_packages/scripts/joystick_package.py"
+<node name="joystick_echo" pkg="rostopic" type="rostopic" output="screen" args="echo RC_Values">
+
+</launch>
