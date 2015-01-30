@@ -8,10 +8,15 @@ int8 left_trigger
 int8 right_trigger
 int8 share
 int8 options
+int8 left_stick
+int8 right_stick
 int8 killswitch
+int8 touch_button
 int8 left_joy_x
 int8 left_joy_y
 int8 right_joy_x
 int8 right_joy_y
 int8 left_brake
 int8 right_brake
+int8 pad_x
+int8 pad_y
