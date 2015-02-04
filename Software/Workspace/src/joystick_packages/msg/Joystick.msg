@@ -1,0 +1,14 @@
+int8 trigger
+int8 b2
+int8 b3
+int8 b4
+int8 b5
+int8 b6
+int8 b7
+int8 b8
+int8 b9
+int8 b10
+int8 b11
+int8 main_joy_x
+int8 main_joy_y
+int8 bottom_toggle_y
