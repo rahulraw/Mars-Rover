@@ -1,55 +1,58 @@
-import rospy
-from joystick_packages.msg import JoystickMsg
-import serial
-import struct
-import time
-import math
-import traceback
+#!/usr/bin/python
+
+from beeper import Beeper
+from joystick_packages.msg import Controller
 from roboclaw import RoboClaw
 from steering_calc import SteeringCalc
 
-## Testing ROS communication with Roboclaw ##
+import math
+import rospy
+import serial
+import struct
+import time
+import traceback
 
 class Steering:
     def __init__(self, topic = 'RCValues', node = 'RoboClaw'):
-        self.topic = topic
+        self.SAFETY_CONSTANT = 0.07
+
+        self.joystick = Controller()
         self.node = node
+        self.topic = topic
 
-        ## drive variables ##
-        self.SafetyConstant = 0.07
-
-        ## rotation variables ##
-        self.proportionalConstant = 0.014
-        self.integralConstant = 0.0
         self.errorThres = 35
-        self.steering_calc = SteeringCalc(0, 0)
         self.min_battery = 119
+        self.proportionalConstant = 0.014
+
         self.mode = 0
         self.modes = ["Bicycle", "Strafe", "Turn On Self"]
+        self.steering_calc = SteeringCalc(0, 0)
         self.steering_calculations = [self.steering_calc.bicycle, self.steering_calc.strafe, self.steering_calc.turn_onself]
-        self.integral = 0
-        self.joystick = JoystickMsg()
+
+        self.controllers = [self.controllerFL, self.controllerFR, self.controllerBL, self.controller.BR]
+        self.velocity = [self.steering_calc.velocity_left, self.steering_calc.velocity_right, self.steering_calc.velocity_left, self.steering_calc.velocity_right]
+        self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
+
+        self.beeper = Beeper(0.5, 1100)
+        self.beeper.start()
 
         rospy.init_node(self.node, anonymous=True)
-        rospy.Subscriber(self.topic, JoystickMsg, self.callback)
+        rospy.Subscriber(self.topic, Controller, self.callback)
         self.rate = rospy.Rate(5)
 
         while not self.roboclaw_connect():
             self.rate.sleep()
 
-        print("Roboclaw connected.") 
-
     def roboclaw_connect(self):
         try:
             print("Connecting to Roboclaws...")
-            self.motorControllerFL = RoboClaw("/dev/roboclawfl")
-            self.motorControllerFR = RoboClaw("/dev/roboclawfr")
-            self.motorControllerBL = RoboClaw("/dev/roboclawbl")
-            self.motorControllerBR = RoboClaw("/dev/roboclawbr")
+            self.controllerFL = RoboClaw("/dev/roboclawfl")
+            self.controllerFR = RoboClaw("/dev/roboclawfr")
+            self.controllerBL = RoboClaw("/dev/roboclawbl")
+            self.controllerBR = RoboClaw("/dev/roboclawbr")
             return True
         except:
             return False
-
 
     def callback(self, data):
         if not self.joystick.killswitch == data.killswitch:
@@ -60,6 +63,7 @@ class Steering:
 
         self.joystick = data
         mode = (self.joystick.right_bumper - self.joystick.left_bumper) % 3
+
         if not self.mode == mode:
             print(self.modes[mode])
             self.mode = mode
@@ -68,219 +72,126 @@ class Steering:
             self.steering_calculations[self.mode](data)
 
     def start(self):
-        print(repr(self.motorControllerFL.readversion()))
-        print(repr(self.motorControllerFR.readversion()))
-        print(repr(self.motorControllerBL.readversion()))
-        print(repr(self.motorControllerBR.readversion()))
-
-        self.motorControllerFL.ResetEncoderCnts()
-        self.motorControllerFR.ResetEncoderCnts()
-        self.motorControllerBL.ResetEncoderCnts()
-        self.motorControllerBR.ResetEncoderCnts()
-
+        [controller.ResetEncoderCnts() for controller in self.controllers]
+            
         while not rospy.is_shutdown():
-            if not self.joystick.killswitch and self.check_batteries():
-                self.pidrun(self.motorControllerFL, self.steering_calc.velocity_left)
-                self.pidrun(self.motorControllerBL, self.steering_calc.velocity_left)
-                self.pidrun(self.motorControllerFR, self.steering_calc.velocity_right)
-                self.pidrun(self.motorControllerBR, self.steering_calc.velocity_right)
-
-
-                self.rotate(self.motorControllerFL, self.steering_calc.front_left_angle * 70.368, 1)
-                self.rotate(self.motorControllerFR, self.steering_calc.front_right_angle * 70.368, 2)
-                self.rotate(self.motorControllerBL, self.steering_calc.back_left_angle * 70.368, 3)
-                self.rotate(self.motorControllerBR, self.steering_calc.back_right_angle * 70.368, 4)
-
+            if not self.joystick.killswitch and self.__check_batteries():
                 try: 
-                    self.motorControllerFL.update_current()
-                    self.motorControllerBL.update_current()
-                    self.motorControllerFR.update_current()
-                    self.motorControllerBR.update_current()
+                    [self.run(controller, velocity) for controller, velocity in zip(self.controllers, self.velocity)]
+                    [self.rotate(controller, angle * 70.368) for controller, angle in zip(self.controllers, self.angle)]
+                    [controller.update_current() for controller in self.controllers]
                 except:
                     pass
             else:
                 self.stop_run()
                 self.stop_rotate()
 
-            try:
-                if self.joystick.square:
-                    print("FL encoder: ", self.__convert_True_to_Mod__(self.motorControllerFL.readM1encoder()[0]))
-                    print("FL target: ", self.steering_calc.front_left_angle * 70.368)
-                    print("FL main battery: ", self.motorControllerFL.readmainbattery())
-                    print("Max Current. Motor 1: ", self.motorControllerFL.max_current_motor_1)
-                    print("Max Current. Motor 2.: ", self.motorControllerFL.max_current_motor_2)
-                if self.joystick.triangle:
-                    print("FR encoder: ", self.__convert_True_to_Mod__(self.motorControllerFR.readM1encoder()[0]))
-                    print("FR target: ", self.steering_calc.front_right_angle * 70.368)
-                    print("FR main battery: ", self.motorControllerFR.readmainbattery())
-                    print("Max Current. Motor 1: ", self.motorControllerFR.max_current_motor_1)
-                    print("Max Current. Motor 2.: ", self.motorControllerFR.max_current_motor_2)
-                if self.joystick.circle:
-                    print("BR encoder: ", self.__convert_True_to_Mod__(self.motorControllerBR.readM1encoder()[0]))
-                    print("BR target: ", self.steering_calc.back_right_angle * 70.368)
-                    print("BR main battery: ", self.motorControllerBR.readmainbattery())
-                    print("Max Current. Motor 1: ", self.motorControllerBR.max_current_motor_1)
-                    print("Max Current. Motor 2.: ", self.motorControllerBR.max_current_motor_2)
-                if self.joystick.x:
-                    print("BL encoder: ", self.__convert_True_to_Mod__(self.motorControllerBL.readM1encoder()[0]))
-                    print("BL target: ", self.steering_calc.back_left_angle * 70.368)
-                    print("BL main battery: ", self.motorControllerBL.readmainbattery())
-                    print("Max Current. Motor 1: ", self.motorControllerBL.max_current_motor_1)
-                    print("Max Current. Motor 2.: ", self.motorControllerBL.max_current_motor_2)
-            except:
-                pass
+            if self.joystick.square:
+                self.print_controller("Front Left", self.controllerFL, self.steering_calc.back_left_angle)
+            if self.joystick.triangle:
+                self.print_controller("Front Right", self.controllerFR, self.steering_calc.back_left_angle)
+            if self.joystick.circle:
+                self.print_controller("Back Right", self.controllerBR, self.steering_calc.back_right_angle)
+            if self.joystick.x:
+                self.print_controller("Back Left", self.controllerBL, self.steering_calc.back_left_angle)
         
             self.rate.sleep()
 
         self.stop_run()
         self.stop_rotate()
-        self.motorControllerFL.ResetEncoderCnts()
-        self.motorControllerFR.ResetEncoderCnts()
-        self.motorControllerBL.ResetEncoderCnts()
-        self.motorControllerBR.ResetEncoderCnts()
 
-
-##PID velocity control##
-    def pidrun(self, motor_controller, target_velocity):
+    def print_controller(self, name, controller, angle):
         try:
-            m2_encoder_value = motor_controller.readM2speed()[0]
+            print("# {0} #".format(name))
+            print("Encoder: {0}".format(self.__convert_True_to_Mod__(controller.readM1encoder()[0])))
+            print("Target: {0}".format(angle * 70.368))
+            print("Main Battery: {0}".format(controller.readmainbattery()))
+            print("Max Current. Motor 1: {0}".format(controller.max_current_motor_1))
+            print("Max Current. Motor 2: {0}".format(controller.max_current_motor_2))
+        except:
+            pass
+
+    def pidrun(self, controller, target_velocity):
+        try:
+            m2_encoder_value = controller.readM2speed()[0]
             error = target_velocity - m2_encoder_value
-            self.integral = self.integral + error
-            motorValue = int((error) * self.proportionalConstant + self.integral * self.integralConstant)
+            motorValue = int((error) * self.proportionalConstant)
 
             if abs(error) <= self.errorThres or target_velocity > 150:
                motorValue = 0
             
             thresholdedMotorValue = 0 if abs(motorValue) < 4 else max(10, abs(motorValue))
             if motorValue > 0:
-                motor_controller.M1Forward(thresholdedMotorValue)
+                controller.M1Forward(thresholdedMotorValue)
             else:
-                motor_controller.M1Backward(thresholdedMotorValue)
+                controller.M1Backward(thresholdedMotorValue)
         except:
             self.stop_run()
-            rospy.loginfo("Failure in run")
             traceback.print_exc()
 
-
-
-    def run(self, motor_controller, target_speed):
+    def run(self, controller, target_speed):
         try:
-            brake = (90 - self.joystick.left_brake) / 70 + 1
-            difference = (target_speed - motor_controller.speed)
-            motor_controller.speed += int(difference * self.SafetyConstant) # + math.copysign(1, difference))
-            motor_controller.speed /= brake
-            motorValue = motor_controller.speed
-            if motor_controller.speed > 10:
-                motor_controller.M2Forward(motorValue)
-            elif motor_controller.speed < -10:
-                motor_controller.M2Backward(abs(motorValue))
+            controller.speed += int((target_speed - controller.speed) * self.SAFETY_CONSTANT)
+            controller.speed /= (90 - self.joystick.left_brake) / 70 + 1
+
+            if controller.speed > 10:
+                controller.M2Forward(controller.speed)
+            elif controller.speed < -10:
+                controller.M2Backward(abs(controller.speed))
             else:
-                motor_controller.M2Forward(0)
-                motor_controller.M2Backward(0)
+                controller.M2Forward(0)
+                controller.M2Backward(0)
         except:
             self.stop_run()
-            rospy.loginfo("Failure in run")
             traceback.print_exc()
 
-    def check_batteries(self):
+    def rotate(self, controller, num_ticks):
         try:
-            return self.motorControllerFL.readmainbattery() > self.min_battery and self.motorControllerBL.readmainbattery() > self.min_battery and self.motorControllerFR.readmainbattery() > self.min_battery and self.motorControllerBR.readmainbattery() > self.min_battery
-        except:
-            return True
-
-    # Converts encoder value to valid ticks.
-    def __convert_True_to_Mod__(self, ticks):
-        if ticks > 2**31:
-            return ticks - 2**32
-        else:
-            return ticks
-
-    # True Position: Tick value that ranges between 0 and 4 billion.
-    # Mod Position: Tick value that ranges between -90*70.368 and +90*70.368.
-    def rotate(self, motor_controller, num_ticks, motor_controller_index = 0):
-        try:
-            m1_encoder_value = self.__convert_True_to_Mod__(motor_controller.readM1encoder()[0])
-            error = num_ticks - m1_encoder_value
-            self.integral = self.integral + error
-            motorValue = max(-20, min(20, int((error) * self.proportionalConstant + self.integral * self.integralConstant)))
-
-            if (motor_controller_index == -2):
-                print("Error: ", error)
-                print("Target: ", num_ticks)
-                print("Encoder: ", m1_encoder_value)
-                print("Integral: ", self.integral)
-                print("Motor Value: ", motorValue)
+            error = num_ticks - self.__convert_True_to_Mod__(controller.readM1encoder()[0])
+            motorValue = max(-20, min(20, int((error) * self.proportionalConstant)))
 
             if abs(error) <= self.errorThres or num_ticks > 180 * 70.368:
                motorValue = 0
 
             thresholdedMotorValue = 0 if abs(motorValue) < 4 else max(8, abs(motorValue))
+
             if motorValue > 0:
-                motor_controller.M1Forward(thresholdedMotorValue)
+                controller.M1Forward(thresholdedMotorValue)
             else:
-                motor_controller.M1Backward(thresholdedMotorValue)
+                controller.M1Backward(thresholdedMotorValue)
         except:
             self.stop_rotate()
-            rospy.loginfo("Failure in rotate")
             traceback.print_exc()
 
     def stop_run(self):
-        self.motorControllerFL.speed = 0
-        self.motorControllerBL.speed = 0
-        self.motorControllerFR.speed = 0
-        self.motorControllerBR.speed = 0
+        try:
+            for controller in self.controllers:
+                controller.speed = 0
 
-        self.motorControllerFL.M1Forward(0)
-        self.motorControllerBL.M1Forward(0)
-        self.motorControllerFR.M1Forward(0)
-        self.motorControllerBR.M1Forward(0)
+            [controller.M1Forward(0) for controller in self.controllers]
+        except:
+            traceback.print_exc()
+            self.beeper.set(True)
 
     def stop_rotate(self):
-        self.motorControllerFL.M2Forward(0)
-        self.motorControllerBL.M2Forward(0)
-        self.motorControllerFR.M2Forward(0)
-        self.motorControllerBR.M2Forward(0)
+        try:
+            [controller.M2Forward(0) for controller in self.controllers]
+        except:
+            traceback.print_exc()
+            self.beeper.set(True)
 
-    def startup():
-        #Move BR & FR negative theta (M1Backward) until mag. proximity sensor.
-        #Move BL & FL positive theta (M1Forward) until mag. proximity sensor.
-        #Once mag. sensor is on:
-            #BR: num_ticks = 90*(70.368), M1Forward 
-            #FR: num_ticks = 90*(70.368), M1Backward
-            #BL: num_ticks = 90*(70.368), M1Forward
-            #FL: num_ticks = 90*(70.368), M1Backwar
+    def __check_batteries(self):
+        try:
+            for controller in self.controllers:
+                if controller.readmainbattery() < self.min_battery:
+                    return False
+        except:
+            pass
 
-        if self.alignedBR and self.alignedFR and self.alignedBL and self.alignedBR:
-            ticksTo90 = 90*70.368
-            self.motorControllerBR.M1Forward(ticksto90)
-            self.motorControllerFR.M1Backward(ticksto90)
-            self.motorControllerBL.M1Forward(ticksto90)
-            self.motorControllerFL.M1Backward(ticksto90)
+        return True
 
-        
-        else:
-            if self.alignedBR:
-                self.motorControllerBR.M1Backward(0)
-            else:
-                self.motorControllerBR.M1Backward(10)
-
-            if self.alignedFR:
-                self.motorControllerBR.M1Backward(0)
-            else:
-                self.motorControllerBR.M1Backward(10)
-            
-            if self.alignedBL:
-                self.motorControllerBR.M1Forward(0)
-            else:
-                self.motorControllerBR.M1Forward(10)
-            
-            if self.alignedFL:
-                self.motorControllerBR.M1Forward(0)
-            else:
-                self.motorControllerBR.M1Forward(10)
-
-            rospy.spin()
-    
+    def __convert_True_to_Mod__(self, ticks):
+        return ticks - 2**32 if ticks > 2**31 else ticks
 
 if __name__ == '__main__':
     args = ["RCValues", "RoboClaw"]
