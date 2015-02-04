@@ -4,6 +4,7 @@ import struct
 import time
 import math
 import traceback
+from std_msgs.msg import Bool
 from roboclaw import RoboClaw
 
 ## Calibration code to align wheels on startup ##
@@ -28,7 +29,7 @@ class Calibration:
         while not rospy.is_shutdown():
             rospy.init_node(self.node, self.topic, self.callback )
             rospy.Subscriber(self.node, self.topic, self.callback)
-            self.pub = rospy.Publisher(self.topic, to_calibrate, que_size = 10)
+            self.pub = rospy.Publisher(self.topic, Bool, que_size = 10)
             rospy.spin()
 
 # Publish to calibrate
@@ -54,6 +55,6 @@ class Calibration:
 
         self.pub.publish(self.to_calibrate)
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     calibration = Calibration()
     calibration.start()
