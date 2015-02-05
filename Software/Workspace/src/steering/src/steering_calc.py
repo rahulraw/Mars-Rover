@@ -27,19 +27,21 @@ class SteeringCalc:
         self.front_right_angle = -45
         self.back_left_angle = -self.front_left_angle
         self.back_right_angle = -self.front_right_angle
-        self.velocity_left = velocity
-        self.velocity_right = -velocity
+        self.velocity_left = controller.left_joy_y
+        self.velocity_right = -controller.left_joy_y
 
     def strafe(self, controller):
-        self.front_left_angle = 45
-        self.front_right_angle = -45
-        self.back_left_angle = -self.front_left_angle
-        self.back_right_angle = -self.front_right_angle
-        self.velocity_left = velocity
-        self.velocity_right = -velocity
+        angle = int(rad2deg(math.atan(controller.right_joy_x/(controller.right_joy_y + 0.01))))
+        print(angle)
+        self.front_left_angle = angle
+        self.back_left_angle = angle
+        self.front_right_angle = self.front_left_angle
+        self.back_right_angle = self.back_left_angle
+        self.velocity_left = controller.left_joy_y
+        self.velocity_right = controller.left_joy_y
 
     def bicycle(self, controller):
-        angle_deg = angle_deg / 2
+        angle_deg = controller.right_joy_x / 2
         angle_rad = deg2rad(angle_deg)
 
         self.origin_to_centre = 9999999 if angle_rad == 0 else 0.256 / math.tan(angle_rad)
@@ -57,5 +59,5 @@ class SteeringCalc:
         self.radius_left = math.sqrt((self.origin_to_centre + 0.256)**2 + 0.256**2)
         self.radius_right = math.sqrt((self.origin_to_centre - 0.256)**2 + 0.256**2)		
         
-        self.velocity_left = velocity * self.safety_constant * abs((self.radius_left / self.origin_to_centre))
-        self.velocity_right = velocity * self.safety_constant * abs((self.radius_right / self.origin_to_centre))
+        self.velocity_left = controller.left_joy_y * self.safety_constant * abs((self.radius_left / self.origin_to_centre))
+        self.velocity_right = controller.left_joy_y * self.safety_constant * abs((self.radius_right / self.origin_to_centre))

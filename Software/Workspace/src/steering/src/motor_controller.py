@@ -24,15 +24,6 @@ class Steering:
         self.min_battery = 119
         self.proportionalConstant = 0.014
 
-        self.mode = 0
-        self.modes = ["Bicycle", "Strafe", "Turn On Self"]
-        self.steering_calc = SteeringCalc(0, 0)
-        self.steering_calculations = [self.steering_calc.bicycle, self.steering_calc.strafe, self.steering_calc.turn_onself]
-
-        self.controllers = [self.controllerFL, self.controllerFR, self.controllerBL, self.controller.BR]
-        self.velocity = [self.steering_calc.velocity_left, self.steering_calc.velocity_right, self.steering_calc.velocity_left, self.steering_calc.velocity_right]
-        self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
-
         self.beeper = Beeper(0.5, 1100)
         self.beeper.start()
 
@@ -42,6 +33,15 @@ class Steering:
 
         while not self.roboclaw_connect():
             self.rate.sleep()
+
+        self.mode = 0
+        self.modes = ["Bicycle", "Strafe", "Turn On Self"]
+        self.steering_calc = SteeringCalc(0, 0)
+        self.steering_calculations = [self.steering_calc.bicycle, self.steering_calc.strafe, self.steering_calc.turn_onself]
+
+        self.controllers = [self.controllerFL, self.controllerFR, self.controllerBL, self.controllerBR]
+        self.velocity = [0, 0, 0, 0]
+        self.angle = [0, 0, 0, 0]
 
     def roboclaw_connect(self):
         try:
@@ -70,6 +70,8 @@ class Steering:
 
         if not self.joystick.killswitch:
             self.steering_calculations[self.mode](data)
+            self.velocity = [self.steering_calc.velocity_left, self.steering_calc.velocity_right, self.steering_calc.velocity_left, self.steering_calc.velocity_right]
+            self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
 
     def start(self):
         [controller.ResetEncoderCnts() for controller in self.controllers]
