@@ -1,8 +1,0 @@
-prefix=/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install
-
-Name: rosserial_python
-Description: Description of rosserial_python
-Version: 0.6.3
-Cflags: 
-Libs: -L/home/marsrover/Documents/uwrobotics.uwmrt/Software/Workspace/install/lib 
-Requires: 
