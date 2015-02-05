@@ -4,7 +4,7 @@ from joystick_packages.msg import Controller
 
 class JrkArm:
 
-    JRK_TARGET_CONSTANT = 27
+    JRK_TARGET_CONSTANT = 7
     JRK_TARGET_MIN = 100
     JRK_TARGET_MAX = 4000
 
@@ -40,7 +40,7 @@ class ArmControl:
 
         rospy.init_node(self.node, anonymous=True)
         rospy.Subscriber(self.topic, Controller, self.callback)
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(40)
         
     def get_direction(self, value):
         return int(0 if not value else value / abs(value))

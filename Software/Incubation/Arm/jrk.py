@@ -25,7 +25,6 @@ class Jrk:
 
     #used to write get the two bytes variables from polulu
     def jrkGetVariable(self, command):
-
         result = self.writeByte(command)
         if (result != 0):
             return result
@@ -38,7 +37,6 @@ class Jrk:
         return struct.unpack('<H', bytesRead)[0]
 
     def jrkSetTarget(self, target):
-        
         byte1 = 0xC0 + (target & 0x1F)
         byte2 = (target >> 5) & 0x7F
 
