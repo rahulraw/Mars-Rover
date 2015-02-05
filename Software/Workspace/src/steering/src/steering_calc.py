@@ -32,7 +32,6 @@ class SteeringCalc:
 
     def strafe(self, controller):
         angle = int(rad2deg(math.atan(controller.right_joy_x/(controller.right_joy_y + 0.01))))
-        print(angle)
         self.front_left_angle = angle
         self.back_left_angle = angle
         self.front_right_angle = self.front_left_angle
