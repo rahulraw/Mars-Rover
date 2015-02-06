@@ -62,14 +62,10 @@ class Steering:
             self.roboclaw_connect()
 
         self.joystick = data
-        mode = (self.joystick.right_bumper - self.joystick.left_bumper) % 3
 
-        if not self.mode == mode:
-            print(self.modes[mode])
-            self.mode = mode
-
+	self.joystick.killswitch = self.joystick.mode == 3 or self.joystick.killswitch
         if not self.joystick.killswitch:
-            self.steering_calculations[self.mode](data)
+            self.steering_calculations[self.joystick.mode](data)
             self.velocity = [self.steering_calc.velocity_left, self.steering_calc.velocity_right, self.steering_calc.velocity_left, self.steering_calc.velocity_right]
             self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
 
