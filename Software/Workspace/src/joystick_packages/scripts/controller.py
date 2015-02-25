@@ -21,7 +21,6 @@ class Joystick:
     def start(self):
         rospy.init_node(self.node, anonymous = True)
         self.pub = rospy.Publisher(self.topic, Controller, queue_size = 10)
-        rospy.init_node('shutoff', anonymous = True)
         self.pub_shutoff = rospy.Publisher('shutoff', Bool, queue_size = 10)
 
         brake_value = 0
