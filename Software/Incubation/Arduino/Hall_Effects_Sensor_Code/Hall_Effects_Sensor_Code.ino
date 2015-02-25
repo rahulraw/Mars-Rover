@@ -35,7 +35,7 @@ void setup()
   nh.advertise(pub_align);
 }
 
-void SensorInit(int sensor_input,int sensor_output){
+void SensorInit(int sensor_input,int sensor_output) {
   pinMode(sensor_input, INPUT);
   pinMode(sensor_output, OUTPUT);
   return;

@@ -4,7 +4,7 @@ import rospy
 
 from joystick_packages.msg import Controller, ControllerRaw
 from std_msgs.msg import Bool
-#from std_msgs.msg import Int16MultiArray
+from auto_shutdown import AutoShutdown
 
 class Joystick:
     def __init__(self):
@@ -17,12 +17,14 @@ class Joystick:
         self.set_axis = [self.set_left_joy_x, self.set_left_joy_y, self.set_right_joy_x, self.set_left_brake, self.set_right_brake, self.set_right_joy_y, self.set_pad_x, self.set_pad_y]
         self.current_time = 0
         self.new_time = 0
-        self.shut_off = False
     
-    def start(self):
         rospy.init_node(self.node, anonymous = True)
         self.pub = rospy.Publisher(self.topic, Controller, queue_size = 10)
-        self.pub_shutoff = rospy.Publisher('shutoff', Bool, queue_size = 10)
+
+        self.auto_shutdown = AutoShutdown(20*60)
+        self.auto_shutdown.start()
+
+    def start(self):
 
         brake_value = 0
 
@@ -30,15 +32,8 @@ class Joystick:
         killswitch = 0
         
         while not rospy.is_shutdown():
-            self.current_time = time.time()
             for char in self.pipe.read(1):
-                self.new_time = time.time() - self.current_time
-                
-                if self.new_time > 20*60:
-                    #Publish to arduino to shut-off
-                    self.shut_off = True
-                    self.pub_shutoff.publish(self.shut_off)                   
-                
+                self.auto_shutdown.updateTime()
                 msg += [ord(char)]
                 
                 if len(msg) == 8:
