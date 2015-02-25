@@ -1,5 +1,5 @@
 # Open the js0 device as if it were a file in read mode.
-pipe = open('/dev/input/js1', 'r')
+pipe = open('/dev/input/js0', 'r')
 
 # Create an empty list to store read characters.
 msg = []

@@ -2,8 +2,7 @@ int8 square
 int8 x
 int8 circle
 int8 triangle
-int8 left_bumper
-int8 right_bumper
+int8 mode
 int8 left_trigger
 int8 right_trigger
 int8 share

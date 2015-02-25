@@ -9,6 +9,7 @@ class RoboClaw:
     def __init__(self, deviceId = '/dev/ttyACM1'):
         self.checksum = 0
         self.port = serial.Serial(deviceId, baudrate=38400, timeout=1)
+        self.speed = 0
 
     def reconnect(self):
         self.port.close()

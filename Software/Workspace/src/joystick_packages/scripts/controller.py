@@ -1,9 +1,10 @@
 #!usr/bin/env python
-
+import time
 import rospy
 
 from joystick_packages.msg import Controller, ControllerRaw
-from std_msgs.msg import Int16MultiArray
+from std_msgs.msg import Bool
+#from std_msgs.msg import Int16MultiArray
 
 class Joystick:
     def __init__(self):
@@ -14,17 +15,31 @@ class Joystick:
         self.controller = Controller()
         self.set_buttons = [self.set_square, self.set_x, self.set_circle, self.set_triangle, self.set_left_bumper, self.set_right_bumper, self.set_left_trigger, self.set_right_trigger, self.set_share, self.set_options, self.set_left_stick, self.set_right_stick, self.set_killswitch, self.set_touch_button]
         self.set_axis = [self.set_left_joy_x, self.set_left_joy_y, self.set_right_joy_x, self.set_left_brake, self.set_right_brake, self.set_right_joy_y, self.set_pad_x, self.set_pad_y]
-
+        self.current_time = 0
+        self.new_time = 0
+        self.shut_off = False
+    
     def start(self):
         rospy.init_node(self.node, anonymous = True)
         self.pub = rospy.Publisher(self.topic, Controller, queue_size = 10)
+        rospy.init_node('shutoff', anonymous = True)
+        self.pub_shutoff = rospy.Publisher('shutoff', Bool, queue_size = 10)
 
         brake_value = 0
 
         msg = []
         killswitch = 0
+        
         while not rospy.is_shutdown():
+        self.current_time = time.time()
             for char in self.pipe.read(1):
+                self.new_time = time.time() - self.current_time
+                
+                if self.new_time > 20*60:
+                    #Publish to arduino to shut-off
+                    self.shut_off = True
+                    self.pub_shutoff.publish(self.shut_off)                   
+                
                 msg += [ord(char)]
                 
                 if len(msg) == 8:
@@ -76,10 +91,10 @@ class Joystick:
             self.controller.triangle = 1 - self.controller.triangle
 
     def set_left_bumper(self, value):
-        self.controller.left_bumper = (self.controller.left_bumper + value) % 128
+        self.controller.mode = (self.controller.mode - 1) % 4
 
     def set_right_bumper(self, value):
-        self.controller.right_bumper = (self.controller.right_bumper + value) % 128
+        self.controller.mode = (self.controller.mode + 1) % 4
 
     def set_left_trigger(self, value):
         self.controller.left_trigger = value
