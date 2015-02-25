@@ -16,7 +16,6 @@ class Joystick:
         self.set_buttons = [self.set_square, self.set_x, self.set_circle, self.set_triangle, self.set_left_bumper, self.set_right_bumper, self.set_left_trigger, self.set_right_trigger, self.set_share, self.set_options, self.set_left_stick, self.set_right_stick, self.set_killswitch, self.set_touch_button]
         self.set_axis = [self.set_left_joy_x, self.set_left_joy_y, self.set_right_joy_x, self.set_left_brake, self.set_right_brake, self.set_right_joy_y, self.set_pad_x, self.set_pad_y]
         self.current_time = 0
-        self.new_time = 0
         self.shut_off = False
     
     def start(self):
@@ -29,16 +28,18 @@ class Joystick:
 
         msg = []
         killswitch = 0
+
+        self.current_time = time.time()
         
         while not rospy.is_shutdown():
-        self.current_time = time.time()
             for char in self.pipe.read(1):
-                self.new_time = time.time() - self.current_time
                 
-                if self.new_time > 20*60:
+                if time.time() - self.current_time > 20*60:
                     #Publish to arduino to shut-off
                     self.shut_off = True
                     self.pub_shutoff.publish(self.shut_off)                   
+
+                self.current_time = time.time();
                 
                 msg += [ord(char)]
                 
