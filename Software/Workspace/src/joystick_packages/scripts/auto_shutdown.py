@@ -26,4 +26,4 @@ class AutoShutdown(threading.Thread):
                 shutoff = Bool()
                 shutoff.data = True
                 self.pub_shutoff.publish(shutoff)
-            sleep(1)
+            time.sleep(1)
