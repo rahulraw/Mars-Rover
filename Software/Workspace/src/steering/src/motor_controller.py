@@ -31,7 +31,7 @@ class Steering:
         rospy.Subscriber(self.topic, Controller, self.callback)
         self.rate = rospy.Rate(5)
 
-        while not self.roboclaw_connect():
+        while not self.roboclaw_connect() and not rospy.is_shutdown():
             self.rate.sleep()
 
         self.mode = 0

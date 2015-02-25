@@ -22,7 +22,6 @@ class Joystick:
     def start(self):
         rospy.init_node(self.node, anonymous = True)
         self.pub = rospy.Publisher(self.topic, Controller, queue_size = 10)
-        rospy.init_node('shutoff', anonymous = True)
         self.pub_shutoff = rospy.Publisher('shutoff', Bool, queue_size = 10)
 
         brake_value = 0
@@ -31,7 +30,7 @@ class Joystick:
         killswitch = 0
         
         while not rospy.is_shutdown():
-        self.current_time = time.time()
+            self.current_time = time.time()
             for char in self.pipe.read(1):
                 self.new_time = time.time() - self.current_time
                 
