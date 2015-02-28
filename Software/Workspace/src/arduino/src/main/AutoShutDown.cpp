@@ -2,16 +2,16 @@
 #include "Arduino.h"
 #include "AutoShutDown.h"
 
-void AutoShutDown::callback(const std_msgs::Bool& off)
+void AutoShutDown::messageCb(const std_msgs::Bool& off)
 {
   this->turn_off = off.data;
 }
 
 void AutoShutDown::AutoShutOff(ros::NodeHandle nh)
 {
-  this->sub = ("shutoff", AutoShutDown::callback);
-
-  nh.subscribe(this->sub);
+  ros::Subscriber<std_msgs::Bool> sub("shutoff", AutoShutDown::messageCb);
+  //this->sub = ros::Subscriber<std_msgs::Bool> ("shutoff", AutoShutDown::callback);
+  nh.subscribe(sub);
 }
 
 void AutoShutDown::run()
