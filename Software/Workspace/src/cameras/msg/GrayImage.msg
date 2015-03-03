@@ -1,2 +1,2 @@
-int8[] image
-int8 width
+uint8[] image
+int16 width

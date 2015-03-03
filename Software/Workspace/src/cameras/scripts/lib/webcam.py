@@ -31,6 +31,7 @@ class Webcam:
         return image
 
     def show_image(self, image):
+        image = cv2.resize(image, (0,0), fx = 1/self.scale, fy = 1/self.scale)
         cv2.imshow('e2', image)
 
     def close(self):
