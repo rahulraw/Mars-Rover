@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(cameras)
+project(arduino)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  roscpp
   rospy
   std_msgs
-  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -44,10 +44,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  GrayImage.msg
-)
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -64,10 +65,10 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+# )
 
 ###################################
 ## catkin specific configuration ##
@@ -80,10 +81,9 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES cameras
-#  CATKIN_DEPENDS rospy std_msgs
+#  LIBRARIES arduino
+#  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
-  CATKIN_DEPENDS message_runtime
 )
 
 ###########
@@ -98,19 +98,19 @@ include_directories(
 )
 
 ## Declare a cpp library
-# add_library(cameras
-#   src/${PROJECT_NAME}/cameras.cpp
+# add_library(arduino
+#   src/${PROJECT_NAME}/arduino.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(cameras_node src/cameras_node.cpp)
+# add_executable(arduino_node src/arduino_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(cameras_node cameras_generate_messages_cpp)
+# add_dependencies(arduino_node arduino_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(cameras_node
+# target_link_libraries(arduino_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -129,7 +129,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS cameras cameras_node
+# install(TARGETS arduino arduino_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -154,7 +154,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_cameras.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_arduino.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

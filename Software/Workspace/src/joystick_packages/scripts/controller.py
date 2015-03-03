@@ -1,9 +1,10 @@
 #!usr/bin/env python
-
+import time
 import rospy
 
 from joystick_packages.msg import Controller, ControllerRaw
-from std_msgs.msg import Int16MultiArray
+from std_msgs.msg import Bool
+from auto_shutdown import AutoShutdown
 
 class Joystick:
     def __init__(self):
@@ -14,17 +15,25 @@ class Joystick:
         self.controller = Controller()
         self.set_buttons = [self.set_square, self.set_x, self.set_circle, self.set_triangle, self.set_left_bumper, self.set_right_bumper, self.set_left_trigger, self.set_right_trigger, self.set_share, self.set_options, self.set_left_stick, self.set_right_stick, self.set_killswitch, self.set_touch_button]
         self.set_axis = [self.set_left_joy_x, self.set_left_joy_y, self.set_right_joy_x, self.set_left_brake, self.set_right_brake, self.set_right_joy_y, self.set_pad_x, self.set_pad_y]
-
-    def start(self):
+        self.current_time = 0
+        self.new_time = 0
+    
         rospy.init_node(self.node, anonymous = True)
         self.pub = rospy.Publisher(self.topic, Controller, queue_size = 10)
+
+        self.auto_shutdown = AutoShutdown(10*60)
+        self.auto_shutdown.start()
+
+    def start(self):
 
         brake_value = 0
 
         msg = []
         killswitch = 0
+        
         while not rospy.is_shutdown():
             for char in self.pipe.read(1):
+                self.auto_shutdown.updateTime()
                 msg += [ord(char)]
                 
                 if len(msg) == 8:

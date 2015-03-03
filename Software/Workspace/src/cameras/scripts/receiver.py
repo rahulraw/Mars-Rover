@@ -5,32 +5,32 @@ import numpy as np
 import rospy
 import sys
 
-from cv_bridge import CvBridge, CvBridgeError
+from lib.bridges.bwbridge import BWBridge
+from lib.bridges.rgbbridge import RGBBridge
 from lib.messages import Messages
 from lib.webcam import Webcam
-from sensor_msgs.msg import Image
+from config import Config
 
 class Receiver:
     def __init__(self):
-        self.webcam = Webcam()
+        self.webcam = Webcam(Config.scale)
         self.topic = rospy.get_param('~topic', 'video_stream')
         self.node = rospy.get_param('~node', 'receiver')
-        self.bridge = CvBridge()
+        if Config.gray:
+            self.bridge = BWBridge()
+        else:
+            self.bridge = RGBBridge()
 
     def callback(self, video):
         image = None
 
-        try:
-            image = self.bridge.imgmsg_to_cv2(video, 'bgr8')
-        except CVBridgeError, e:
-            rospy.loginfo(Messages.cv_bridge_error %e) 
+        image = self.bridge.from_imgmsg(video)
 
         self.webcam.show_image(image)
-        rospy.loginfo(Messages.image_received %(video.width, video.height, video.header.stamp.to_sec(), rospy.get_time()))
         cv2.waitKey(5)
 
     def start(self):
-        rospy.Subscriber(self.topic, Image, self.callback)
+        rospy.Subscriber(self.topic, self.bridge.getType(), self.callback)
         rospy.init_node(self.node, anonymous=True)
         rospy.spin()
         
