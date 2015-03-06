@@ -3,10 +3,12 @@
 #include "AutoShutDown.h"
 
 ros::NodeHandle nh;
-
 void setup()
 {
   nh.initNode();
+  AutoShutDown autoshutdown(7);
+  ros::Subscriber<const std_msgs::Bool> sub("shutoff", autoshutdown.messageCb));
+  nh.subscribe(sub);
   Serial.begin(9600);
 }
 
