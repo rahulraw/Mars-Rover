@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from joystick_packages.msg import Controller
+from joystick_packages.msg import Joystick
 from roboclaw import RoboClaw
 
 import math
@@ -12,12 +12,14 @@ class EndEffector:
     def __init__(self, topic = 'RCValues', node = 'RoboClaw'):
         self.min_battery = 119;
 
-        self.joystick = Controller()
+        self.joystick1 = Joystick()
+        self.joystick2 = Joystick()
         self.node = node
         self.topic = topic
 
         rospy.init_node(self.node, anonymous=True)
-        rospy.Subscriber(self.topic, Controller, self.callback)
+        rospy.Subscriber("joystick1", Joystick, self.callback1)
+        rospy.Subscriber("joystick2", Joystick, self.callback2)
         self.rate = rospy.Rate(5)
 
         while not self.roboclaw_connect() and not rospy.is_shutdown():
@@ -26,21 +28,25 @@ class EndEffector:
     def roboclaw_connect(self):
         try:
             print("Connecting to Roboclaws...")
-            self.armEndEffector = RoboClaw("/dev/ttyACM1")
+            self.endAndStick = RoboClaw("/dev/roboclawfl")
+            self.boom = RoboClaw("/dev/roboclawbl")
             return True
         except:
             return False
 
-    def callback(self, data):
-        self.joystick = data
+    def callback1(self, data):
+        self.joystick1 = data
+
+    def callback2(self, data):
+        self.joystick2 = data
 
     def start(self):
-        self.armEndEffector.ResetEncoderCnts()
-            
         while not rospy.is_shutdown():
             if True or self.__check_batteries():
                 try: 
-                    self.run(self.armEndEffector, self.joystick.left_joy_y)
+                    self.run(self.endAndStick, self.joystick1.main_joy_x, 1)
+                    self.run(self.endAndStick, self.joystick1.main_joy_y, 2)
+                    self.run(self.boom, self.joystick2.main_joy_y, 1)
                 except:
                     pass
             else:
@@ -52,30 +58,37 @@ class EndEffector:
         self.stop_run()
         self.stop_rotate()
 
-    def run(self, controller, target_speed):
+    def run(self, controller, target_speed, motor):
         target_speed = int((target_speed/90)*127)
-       
+        forward = [controller.M1Forward, controller.M2Forward]
+        backward = [controller.M1Backward, controller.M2Backward]
+
+        motorForward = forward[motor - 1]
+        motorBackward = backward[motor - 1]
+
         try:
             if target_speed > 10:
-                controller.M1Forward(target_speed)
+                motorForward(target_speed)
             elif target_speed < -10:
-                controller.M1Backward(abs(target_speed))
+                motorBackward(abs(target_speed))
             else:
-                controller.M1Forward(0)
-                controller.M1Backward(0)
+                motorForward(0)
+                motorBackward(0)
         except:
             self.stop_run()
             traceback.print_exc()
 
     def stop_run(self):
         try:
-            self.armEndEffector.M1Forward(0)
+            self.endAndStick.M1Forward(0)
+            self.endAndStick.M2Forward(0)
+            self.boom.M1Forward(0)
         except:
             traceback.print_exc()
 
     def __check_batteries(self):
         try:
-            if self.armEndEffector.readmainbattery() < self.min_battery:
+            if self.endAndStick.readmainbattery() < self.min_battery or self.boom.readmainbattery() < self.min_battery:
                 return False
         except:
             pass
