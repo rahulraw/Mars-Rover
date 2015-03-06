@@ -43,6 +43,9 @@ class Steering:
         self.velocity = [0, 0, 0, 0]
         self.angle = [0, 0, 0, 0]
 
+        for controller in self.controllers:
+            print(controller.readversion())
+
     def roboclaw_connect(self):
         try:
             print("Connecting to Roboclaws...")
@@ -61,11 +64,14 @@ class Steering:
         if not self.joystick.share == data.share and data.share == 1:
             self.roboclaw_connect()
 
-        self.joystick = data
+        if data.mode != self.joystick.mode:
+            print(self.modes[data.mode % 3])
 
-	self.joystick.killswitch = self.joystick.mode == 3 or self.joystick.killswitch
+        self.joystick = data
+        self.joystick.killswitch = self.joystick.mode == 3 or self.joystick.killswitch
+
         if not self.joystick.killswitch:
-            self.steering_calculations[self.joystick.mode](data)
+            self.steering_calculations[self.joystick.mode % 3](data)
             self.velocity = [self.steering_calc.velocity_left, self.steering_calc.velocity_right, self.steering_calc.velocity_left, self.steering_calc.velocity_right]
             self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
 
