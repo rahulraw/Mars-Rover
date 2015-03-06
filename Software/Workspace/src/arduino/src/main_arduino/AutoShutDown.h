@@ -1,4 +1,3 @@
-
 #include <std_msgs/Bool.h>
 
 class AutoShutDown
@@ -11,7 +10,7 @@ class AutoShutDown
       }
       else 
       {
-        digitalWrite(this->_pin, HIGH);
+        digitalWrite(this->pin, HIGH);
       }
     }
 

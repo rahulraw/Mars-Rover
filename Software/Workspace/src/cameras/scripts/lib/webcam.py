@@ -10,6 +10,12 @@ class Webcam:
         self.camera_id = camera_id
         self.playingVideo = True
 
+    def rgb_to_gray(img):
+        return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+    def gray_to_rgb(img):
+        return cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
     def start_capture(self): 
         self.capture = cv2.VideoCapture(self.camera_id)
 
@@ -25,6 +31,7 @@ class Webcam:
         return image
 
     def show_image(self, image):
+        image = cv2.resize(image, (0,0), fx = 1/self.scale, fy = 1/self.scale)
         cv2.imshow('e2', image)
 
     def close(self):

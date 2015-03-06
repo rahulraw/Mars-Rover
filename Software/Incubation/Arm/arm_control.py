@@ -29,7 +29,6 @@ class JrkArm:
         self.target = self.contain(self.target + self.direction * self.JRK_TARGET_CONSTANT)
         self.jrk.jrkSetTarget(self.target)
 
-
 class ArmControl:
     def __init__(self, topic = 'RCValues', node = "ArmControl"):
         self.topic = topic
@@ -53,7 +52,6 @@ class ArmControl:
         self.arm1.jrk.jrkGetErrorFlagsHalting()
         
         while not rospy.is_shutdown():
-
             self.arm1.run()
             self.rate.sleep()
 
