@@ -85,10 +85,12 @@ class Joystick:
             self.controller.triangle = 1 - self.controller.triangle
 
     def set_left_bumper(self, value):
-        self.controller.mode = (self.controller.mode - 1) % 4
+        if value == 1:
+            self.controller.mode = (self.controller.mode - 1) % 4
 
     def set_right_bumper(self, value):
-        self.controller.mode = (self.controller.mode + 1) % 4
+        if value == 1:
+            self.controller.mode = (self.controller.mode + 1) % 4
 
     def set_left_trigger(self, value):
         self.controller.left_trigger = value
