@@ -1,4 +1,4 @@
-#!usr/bin/env python
+#!/usr/bin/python
 
 import rospy
 from joystick_packages.msg import Joystick as Msg, ControllerRaw
@@ -6,9 +6,9 @@ from std_msgs.msg import Int16MultiArray
 
 class Joystick:
     def __init__(self):
-        self.topic = rospy.get_param('~topic', 'JoyValues')
-        self.node = rospy.get_param('~node', 'joystick') 
-        self.pipe = open(rospy.get_param('~input_id', '/dev/input/js0'), 'r')
+        self.topic = rospy.get_param('topic', 'joystick2')
+        self.node = rospy.get_param('node', 'joystick2')
+        self.pipe = open(rospy.get_param('inputid', '/dev/input/js2'), 'r')
         self.pconstant = 0.2
         self.joy_msg = Msg()
         self.set_buttons = [self.set_trigger, self.set_b2, self.set_b3, self.set_b4, self.set_b5, self.set_b6, self.set_b7, self.set_b8, self.set_b9, self.set_b10, self.set_b11]
