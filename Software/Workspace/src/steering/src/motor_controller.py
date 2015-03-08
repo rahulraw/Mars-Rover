@@ -57,6 +57,18 @@ class Steering:
         except:
             return False
 
+    def roboclaw_set_param(self):
+        #These values are experimentally determined
+        P_CONST = 1
+        I_CONST = 0.1
+        D_CONST = 0
+        QPPS = 50000
+
+        for controller in self.controllers:
+
+            #set the constants for speed control
+            controller.setM2pidq(P_CONST, I_CONST, D_CONST, QPPS)
+
     def callback(self, data):
         if not self.joystick.killswitch == data.killswitch:
             print("Killswitch {0}".format(data.killswitch))
@@ -115,36 +127,17 @@ class Steering:
         except:
             pass
 
-    def pidrun(self, controller, target_velocity):
-        try:
-            m2_encoder_value = controller.readM2speed()[0]
-            error = target_velocity - m2_encoder_value
-            motorValue = int((error) * self.proportionalConstant)
-
-            if abs(error) <= self.errorThres or target_velocity > 150:
-               motorValue = 0
-            
-            thresholdedMotorValue = 0 if abs(motorValue) < 4 else max(10, abs(motorValue))
-            if motorValue > 0:
-                controller.M1Forward(thresholdedMotorValue)
-            else:
-                controller.M1Backward(thresholdedMotorValue)
-        except:
-            self.stop_run()
-            traceback.print_exc()
-
     def run(self, controller, target_speed):
-        try:
-            controller.speed += int((target_speed - controller.speed) * self.SAFETY_CONSTANT)
-            controller.speed /= (90 - self.joystick.left_brake) / 70 + 1
 
-            if controller.speed > 10:
-                controller.M2Forward(controller.speed)
-            elif controller.speed < -10:
-                controller.M2Backward(abs(controller.speed))
+        CONST_ACCEL = 100000 #in the same unit as QPPS
+
+        try:
+            if target_speed > 10:
+                controller.SetM2SpeedAccel(CONST_ACCEL, target_speed)
+            elif target_speed < -10:
+                controller.SetM2SpeedAccel(CONST_ACCEL, abs(target_speed))
             else:
-                controller.M2Forward(0)
-                controller.M2Backward(0)
+                controller.SetM2SpeedAccel(CONST_ACCEL, 0)
         except:
             self.stop_run()
             traceback.print_exc()
