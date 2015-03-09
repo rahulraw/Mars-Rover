@@ -7,7 +7,7 @@ class Arduino:
     def __init__(self):
         rospy.init_node('serial_bridge', anonymous=True)
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM1', 9600)
+        self.ser = serial.Serial('/dev/ttyACM0', 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller();
 

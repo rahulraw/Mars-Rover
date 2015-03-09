@@ -19,7 +19,7 @@ Claw claw;
 void setup()
 {
     Serial.begin(9600);
-    claw.claw.attach(CLAW_PIN);
+    claw.claw.attach(CLAW_PIN, claw.pulse_width_min, claw.pulse_width_max);
     nodeHandler.addNode(&claw);
 }
 
