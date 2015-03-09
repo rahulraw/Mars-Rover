@@ -29,7 +29,7 @@ class EndEffector:
         try:
             print("Connecting to Roboclaws...")
             self.endAndStick = RoboClaw("/dev/roboclawfl")
-            self.boom = RoboClaw("/dev/roboclawbl")
+            # self.boom = RoboClaw("/dev/roboclawbl")
             return True
         except:
             return False
@@ -46,7 +46,7 @@ class EndEffector:
                 try: 
                     self.run(self.endAndStick, self.joystick1.main_joy_x, 1)
                     self.run(self.endAndStick, self.joystick1.main_joy_y, 2)
-                    self.run(self.boom, self.joystick2.main_joy_y, 1)
+                    # self.run(self.boom, self.joystick2.main_joy_y, 1)
                 except:
                     pass
             else:
@@ -82,13 +82,13 @@ class EndEffector:
         try:
             self.endAndStick.M1Forward(0)
             self.endAndStick.M2Forward(0)
-            self.boom.M1Forward(0)
+            # self.boom.M1Forward(0)
         except:
             traceback.print_exc()
 
     def __check_batteries(self):
         try:
-            if self.endAndStick.readmainbattery() < self.min_battery or self.boom.readmainbattery() < self.min_battery:
+            if self.endAndStick.readmainbattery() < self.min_battery:
                 return False
         except:
             pass
