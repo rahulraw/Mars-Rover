@@ -7,8 +7,8 @@ class Arduino:
     def __init__(self):
         rospy.init_node('serial_bridge', anonymous=True)
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM2', 9600)
-        self.rate = rospy.Rate(5)
+        self.ser = serial.Serial('/dev/ttyACM1', 9600)
+        self.rate = rospy.Rate(10)
         self.controller = Controller();
 
     def callback(self, controller):
@@ -21,7 +21,8 @@ class Arduino:
             self.claw();
 
     def claw(self):
-        self.ser.write(chr(3))
+        print(self.controller.left_joy_x);
+        self.ser.write(chr(1))
         self.ser.write(chr((self.controller.left_joy_x + 90) / 2))
         
     def setup_topics(self):
