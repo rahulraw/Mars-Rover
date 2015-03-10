@@ -29,9 +29,9 @@ void setup()
 {
     Serial.begin(9600);
     claw.claw.attach(CLAW_PIN, claw.pulse_width_min, claw.pulse_width_max);
-    nodeHandler.addNode(&claw);
-    nodeHandler.addNode(&cameraYaw);
-    nodeHandler.addNode(&cameraPitch);
+    nodeHandler.addSubscriber(&claw);
+    nodeHandler.addSubscriber(&cameraYaw);
+    nodeHandler.addSubscriber(&cameraPitch);
 }
 
 void loop()
@@ -39,18 +39,23 @@ void loop()
     if (waitForMessage())
     {
         topic = Serial.read();
-        if (nodeHandler.validNode(topic)) {
-            node = nodeHandler.getNode(topic);
-            bytes = node->getBytes();
-
-            for (int i = 0; i < bytes; i++)
-            {
-                data[i] = (int) Serial.read();
-            }
-            node->run(data);
-        }
+        handleSubscriber(topic);
     }
     delay(DELAY);
+}
+
+void handleSubscriber(int topic)
+{
+    if (nodeHandler.validSubscriber(topic)) {
+        node = nodeHandler.getSubscriber(topic);
+        bytes = node->getBytes();
+
+        for (int i = 0; i < bytes; i++)
+        {
+            data[i] = (int) Serial.read();
+        }
+        node->run(data);
+    }
 }
 
 bool waitForMessage()

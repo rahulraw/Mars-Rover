@@ -3,9 +3,9 @@
 
 #include "Arduino.h"
 #include "Node.h"
+#include "Subscriber.h"
 
-
-class AutoShutDown : public Node
+class AutoShutDown : public Subscriber
 {
     public:
         int relay_pin;

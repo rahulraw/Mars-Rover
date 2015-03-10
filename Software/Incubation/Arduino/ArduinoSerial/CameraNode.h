@@ -6,8 +6,9 @@
 #include "Arduino.h"
 #include "Node.h"
 #include "ServoNode.h"
+#include "Subscriber.h"
 
-class CameraNode : public Node
+class CameraNode : public Subscriber
 {
     public:
         CameraNode();

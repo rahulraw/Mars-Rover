@@ -5,8 +5,9 @@
 
 #include "Arduino.h"
 #include "Node.h"
+#include "Subscriber.h"
 
-class ServoNode : public Node
+class ServoNode : public Subscriber
 {
     public:
         int pulse_width_max;

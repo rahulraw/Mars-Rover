@@ -2,22 +2,40 @@
 
 NodeHandler::NodeHandler()
 {
-    this->length = 0;
+    this->publisherLength = 0;
+    this->subscriberLength = 0;
 }
 
-Node * NodeHandler::getNode(int topic) 
+Subscriber * NodeHandler::getSubscriber(int topic)
 {
-    return this->nodes[topic - 1]; 
+    return this->subscribers[topic - 1];
 }
 
-void NodeHandler::addNode(Node * node)
+Publisher * NodeHandler::getPublisher(int topic)
 {
-    node->setTopicId(this->length + 1);
-    nodes[this->length] = node;    
-    this->length++;
+    return this->publishers[topic - 1];
 }
 
-bool NodeHandler:: validNode(int topic)
+void NodeHandler::addSubscriber(Subscriber * node)
 {
-    return topic <= this->length;
+    node->setTopicId(this->subscriberLength + 1);
+    this->subscribers[this->subscriberLength] = node;
+    this->subscriberLength++;
+}
+
+void NodeHandler::addPublisher(Publisher * node)
+{
+    node->setTopicId(this->publisherLength + 1);
+    this->publishers[this->publisherLength] = node;
+    this->publisherLength++;
+}
+
+bool NodeHandler:: validSubscriber(int topic)
+{
+    return topic <= this->subscriberLength;
+}
+
+bool NodeHandler:: validPublisher(int topic)
+{
+    return topic <= this->publisherLength;
 }

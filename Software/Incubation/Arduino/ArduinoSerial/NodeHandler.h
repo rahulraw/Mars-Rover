@@ -3,17 +3,26 @@
 
 #include <Servo.h>
 #include "Node.h"
+#include "Subscriber.h"
+#include "Publisher.h"
 
 class NodeHandler
 {
     public:
         NodeHandler();
-        Node * getNode(int topic);
-        void addNode(Node * node);
-        bool validNode(int topic);
+        Subscriber * getSubscriber(int topic);
+        bool validSubscriber(int topic);
+        void addSubscriber(Subscriber * node);
+
+        Publisher * getPublisher(int topic);
+        bool validPublisher(int topic);
+        void addPublisher(Publisher * node);
     private:
-        Node * nodes[4];
-        int length;
+        Subscriber * subscribers[4];
+        int subscriberLength;
+
+        Publisher * publishers[4];
+        int publisherLength;
 };
 
 #endif
