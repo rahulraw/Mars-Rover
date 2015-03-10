@@ -1,0 +1,20 @@
+<library path="src">
+    <class name="My Plugin" type="rqt_mypkg.main_ui.ArthrobotGui" base_class_type="rqt_gui_py::Plugin">
+      <description>
+        A Python GUI to control various features of the Arthrobot Rover.
+      </description>
+      <qtgui>
+        <!-- optional grouping...
+        <group>
+          <label>Group</label>
+        </group>
+        <group>
+          <label>Subgroup</label>
+        </group>
+        -->
+        <label>Arthrobot Rover RQT</label>
+        <icon type="theme">system-help</icon>
+        <statustip>User interface for the Arthrobot Rover</statustip>
+      </qtgui>
+    </class>
+</library>
