@@ -83,7 +83,7 @@ void NodeHandler::handlePublishers()
             Serial.write(topic);
             Serial.write(this->bytes);
 
-            for (int i = 0; i < this->bytes; i++) {
+            for (int i = 1; i < this->bytes; i++) {
                 Serial.write(pub_data[i]);
             }
         }
