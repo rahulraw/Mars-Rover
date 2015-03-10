@@ -56,7 +56,7 @@ void loop()
 bool waitForMessage()
 {
     Serial.write(ACCEPT_SERIAL);
-    while (!Serial.available() || millis() - currentTime < TIMEOUT);
+    while (!Serial.available() && millis() - currentTime < TIMEOUT);
     currentTime = millis();
     return Serial.available();
 }

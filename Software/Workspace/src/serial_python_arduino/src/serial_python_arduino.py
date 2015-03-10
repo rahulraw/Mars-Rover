@@ -1,4 +1,5 @@
 import serial
+import struct
 import rospy
 from  time import sleep
 from joystick_packages.msg import Controller
@@ -8,7 +9,7 @@ class Arduino:
         rospy.init_node('serial_bridge', anonymous=True)
         self.ACCEPT_SERIAL = 255
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM2', 9600)
+        self.ser = serial.Serial('/dev/ttyACM1', 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
 
@@ -18,8 +19,8 @@ class Arduino:
 
     def start(self):
         while not rospy.is_shutdown():
-            self.rate.sleep()
-            if (self.ser.read(1) == self.ACCEPT_SERIAL):
+            msg = struct.unpack('B', self.ser.read(1))[0]
+            if (msg == self.ACCEPT_SERIAL):
                 self.claw();
 
     def claw(self):
