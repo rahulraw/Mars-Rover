@@ -14,7 +14,7 @@ class Arduino:
         self.controller = Controller()
 
     def callback(self, controller):
-        if controller.left_joy_x != self.controller.left_joy_x:
+        if controller.left_joy_x != self.controller.left_joy_x or controller.left_trigger != self.controller.left_trigger:
             self.controller = controller
 
     def start(self):
@@ -24,8 +24,9 @@ class Arduino:
                 self.claw();
 
     def claw(self):
-        self.ser.write(chr(1))
-        self.ser.write(chr((self.controller.left_joy_x + 90) / 2))
+        if self.controller.left_trigger == 0:
+            self.ser.write(chr(1))
+            self.ser.write(chr((self.controller.left_joy_x + 90) / 2))
         
     def setup_topics(self):
         rospy.Subscriber("RCValues", Controller, self.callback, queue_size=1)
