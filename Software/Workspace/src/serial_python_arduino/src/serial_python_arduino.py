@@ -6,10 +6,12 @@ from joystick_packages.msg import Controller
 
 class Arduino:
     def __init__(self):
-        rospy.init_node('serial_bridge', anonymous=True)
         self.ACCEPT_SERIAL = 255
+        self.SEND_SERIAL = 254
+
+        rospy.init_node('serial_bridge', anonymous=True)
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM1', 9600)
+        self.ser = serial.Serial('/dev/ttyACM2', 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
 
@@ -19,9 +21,14 @@ class Arduino:
 
     def start(self):
         while not rospy.is_shutdown():
-            msg = struct.unpack('B', self.ser.read(1))[0]
+            msg = self._read_byte()
             if (msg == self.ACCEPT_SERIAL):
                 self.claw();
+            elif (msg == self.SEND_SERIAL):
+                topic = self._read_byte()
+                length = self._read_byte()
+                data = [self._read_byte() for i in range(length)]
+                # Data needs to be passed into our other message
 
     def claw(self):
         if self.controller.left_trigger == 0:
@@ -30,6 +37,9 @@ class Arduino:
         
     def setup_topics(self):
         rospy.Subscriber("RCValues", Controller, self.callback, queue_size=1)
+
+    def _read_byte(self):
+        return struct.unpack('B', self.ser.read(1))[0]
 
 if __name__ == '__main__':
     arduino = Arduino()

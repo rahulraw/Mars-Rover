@@ -10,8 +10,6 @@ class Node
         int getBytes();
 
         void setTopicId(int topicId);
-
-        virtual void run(char * data) = 0;
     protected:
         int topicId;
         int bytes;

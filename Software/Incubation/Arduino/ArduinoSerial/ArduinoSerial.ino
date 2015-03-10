@@ -5,22 +5,12 @@
 #include "Node.h"
 #include "NodeHandler.h"
 
-#define TIMEOUT 500
-#define ACCEPT_SERIAL 255
-#define DELAY 50
 #define CLAW_PIN 10
 
 #define PULSE_WIDTH_MAX 1340
 #define PULSE_WIDTH_MIN 970
 
-char data[2];
-int topic;
-int bytes;
-Node * node;
-
-unsigned long currentTime;
-
-NodeHandler nodeHandler;
+NodeHandler nodeHandler(20, 500);
 ServoNode claw(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
 ServoNode cameraYaw(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
 ServoNode cameraPitch(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
@@ -36,32 +26,5 @@ void setup()
 
 void loop()
 {
-    if (waitForMessage())
-    {
-        topic = Serial.read();
-        handleSubscriber(topic);
-    }
-    delay(DELAY);
-}
-
-void handleSubscriber(int topic)
-{
-    if (nodeHandler.validSubscriber(topic)) {
-        node = nodeHandler.getSubscriber(topic);
-        bytes = node->getBytes();
-
-        for (int i = 0; i < bytes; i++)
-        {
-            data[i] = (int) Serial.read();
-        }
-        node->run(data);
-    }
-}
-
-bool waitForMessage()
-{
-    Serial.write(ACCEPT_SERIAL);
-    while (!Serial.available() && millis() - currentTime < TIMEOUT);
-    currentTime = millis();
-    return Serial.available();
+    nodeHandler.run();
 }
