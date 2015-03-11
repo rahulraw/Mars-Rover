@@ -21,7 +21,7 @@ class Joystick:
         rospy.init_node(self.node, anonymous = True)
         self.pub = rospy.Publisher(self.topic, Controller, queue_size = 10)
 
-        self.auto_shutdown = AutoShutdown(10*60)
+        self.auto_shutdown = AutoShutdown(10)
         self.auto_shutdown.start()
 
     def start(self):

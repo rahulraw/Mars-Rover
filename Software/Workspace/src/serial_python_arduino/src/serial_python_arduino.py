@@ -2,6 +2,7 @@ import serial
 import struct
 import rospy
 from  time import sleep
+from std_msgs.msg import Bool
 from joystick_packages.msg import Controller
 
 class Arduino:
@@ -11,19 +12,27 @@ class Arduino:
 
         rospy.init_node('serial_bridge', anonymous=True)
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM2', 9600)
+        self.ser = serial.Serial('/dev/ttyACM3', 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
+        self.shut_down = False
+        self.message_length = 0
+        self.messages = []
 
-    def callback(self, controller):
+    def callback_claw(self, controller):
         if controller.left_joy_x != self.controller.left_joy_x or controller.left_trigger != self.controller.left_trigger:
             self.controller = controller
+
+    def callback_auto_shut_down(self, shut_down):
+        self.shut_down = shut_down.data
 
     def start(self):
         while not rospy.is_shutdown():
             msg = self._read_byte()
             if (msg == self.ACCEPT_SERIAL):
-                self.claw();
+                self.claw()
+                self.auto_shut_down()
+                self.send()
             elif (msg == self.SEND_SERIAL):
                 topic = self._read_byte()
                 length = self._read_byte()
@@ -32,11 +41,25 @@ class Arduino:
 
     def claw(self):
         if self.controller.left_trigger == 0:
-            self.ser.write(chr(1))
-            self.ser.write(chr((self.controller.left_joy_x + 90) / 2))
-        
+            self.message_length += 1
+            self.messages.append(chr(1))
+            self.messages.append(chr((self.controller.left_joy_x + 90) / 2))
+
+    def auto_shut_down(self):
+        if self.shut_down:
+            self.message_length += 1
+            self.messages.append(chr(2))
+            self.messages.append(chr(1))
+
+    def send(self):
+        self.ser.write(chr(self.message_length))
+        [self.ser.write(byte) for byte in self.messages]
+        self.message_length = 0
+        self.messages = []
+
     def setup_topics(self):
-        rospy.Subscriber("RCValues", Controller, self.callback, queue_size=1)
+        rospy.Subscriber("RCValues", Controller, self.callback_claw, queue_size=1)
+        rospy.Subscriber("shutoff", Bool, self.callback_auto_shut_down, queue_size=1)
 
     def _read_byte(self):
         return struct.unpack('B', self.ser.read(1))[0]

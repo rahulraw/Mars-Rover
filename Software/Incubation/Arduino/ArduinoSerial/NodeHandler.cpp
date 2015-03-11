@@ -43,6 +43,10 @@ void NodeHandler::run()
     {
         this->handleSubscriber();
     }
+    else
+    {
+        Serial.flush();
+    }
 }
 
 void NodeHandler::addSubscriber(Subscriber * node)
@@ -61,12 +65,12 @@ void NodeHandler::addPublisher(Publisher * node)
 
 bool NodeHandler:: validSubscriber(int topic)
 {
-    return topic <= this->subscriberLength;
+    return topic <= this->subscriberLength && topic > 0;
 }
 
 bool NodeHandler:: validPublisher(int topic)
 {
-    return topic <= this->publisherLength;
+    return topic <= this->publisherLength && topic > 0;
 }
 
 void NodeHandler::handlePublishers()
@@ -80,6 +84,7 @@ void NodeHandler::handlePublishers()
         // it wants to send a message or not
         if (pub_data[0] == 1)
         {
+            Serial.write(SEND_SERIAL);
             Serial.write(topic);
             Serial.write(this->bytes);
 
@@ -92,15 +97,17 @@ void NodeHandler::handlePublishers()
 
 void NodeHandler::handleSubscriber()
 {
-    int topic = Serial.read();
-    if (this->validSubscriber(topic))
+    int numTopics = Serial.read();
+    for (int j = 0; j < numTopics; j++)
     {
-        this->bytes = this->getSubscriber(topic)->getBytes();
-
-        for (int i = 0; i < bytes; i++)
+        int topic = Serial.read();
+        if (this->validSubscriber(topic))
         {
-            this->data[i] = (int) Serial.read();
+            for (int i = 0; i < this->getSubscriber(topic)->getBytes(); i++)
+            {
+                this->data[i] = (int) Serial.read();
+            }
+            this->getSubscriber(topic)->run(this->data);
         }
-        this->getSubscriber(topic)->run(this->data);
     }
 }
