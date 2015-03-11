@@ -6,7 +6,6 @@ class OrientWidget(QtGui.QWidget):
     
     def __init__(self, parent=None):
         super(OrientWidget, self).__init__(parent)
-        self.size = self.size()
         
         self.brush = QtGui.QBrush()
         self.setBrush(QtCore.Qt.NoBrush)
@@ -31,14 +30,14 @@ class OrientWidget(QtGui.QWidget):
         painter.setBrush(self.brush)
       
         self.drawRover2DTop(painter)
-        painter.rotate(45)
+        #painter.rotate(45)
         painter.translate(25.0,10.0)
         painter.setBrush(QtGui.QBrush(QtCore.Qt.red, self.style))
         painter.drawRoundedRect(65,60,25,50,5.0,5.0)
         painter.drawRoundedRect(160,60,25,50,5.0,5.0)
         painter.drawRoundedRect(65,210,25,50,5.0,5.0)
         painter.drawRoundedRect(160,210,25,50,5.0,5.0)
-        painter.rotate(-45)
+        #painter.rotate(-45)
         painter.translate(-25.0,-10.0)
         self.drawRover2DSide(painter)  
         painter.drawText(QPoint(280,300),"Rover Incline: "+str(self.incline) + " degrees")
