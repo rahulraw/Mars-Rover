@@ -12,18 +12,23 @@ class Arduino:
 
         rospy.init_node('serial_bridge', anonymous=True)
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM3', 9600)
+        self.ser = serial.Serial('/dev/ttyACM0', 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
         self.shut_down = False
+        self.send_shut_down = False
         self.message_length = 0
         self.messages = []
 
     def callback_claw(self, controller):
-        if controller.left_joy_x != self.controller.left_joy_x or controller.left_trigger != self.controller.left_trigger:
-            self.controller = controller
+        if controller.killswitch != self.controller.killswitch:
+            shut_down = Bool()
+            shut_down.data = self.controller.killswitch == 1
+            self.callback_auto_shut_down(shut_down)
+        self.controller = controller
 
     def callback_auto_shut_down(self, shut_down):
+        self.send_shut_down = self.shut_down != shut_down.data
         self.shut_down = shut_down.data
 
     def start(self):
@@ -46,10 +51,11 @@ class Arduino:
             self.messages.append(chr((self.controller.left_joy_x + 90) / 2))
 
     def auto_shut_down(self):
-        if self.shut_down:
+        if self.send_shut_down:
             self.message_length += 1
             self.messages.append(chr(2))
-            self.messages.append(chr(1))
+            self.messages.append(chr(1 if self.shut_down else 0))
+            self.send_shut_down = False
 
     def send(self):
         self.ser.write(chr(self.message_length))

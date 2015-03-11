@@ -10,7 +10,6 @@ AutoShutDown::AutoShutDown(int relay_pin)
 void AutoShutDown::init(int relay_pin)
 {
     this->relay_pin = relay_pin;
-    digitalWrite(this->relay_pin, HIGH);
     this->bytes = 1;
 }
 
