@@ -21,6 +21,6 @@ void AutoShutDown::run(char * data)
 
 void AutoShutDown::turn_off(int data_turn_off)
 {
-    bool type = data_turn_off == 1? HIGH: LOW;
+    bool type = data_turn_off == 1? LOW : HIGH;
     digitalWrite(this->relay_pin, type);
 }

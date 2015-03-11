@@ -10,7 +10,7 @@
 
 #define PULSE_WIDTH_MAX 1400
 #define PULSE_WIDTH_MIN 900
-#define RELAY_PIN 13
+#define RELAY_PIN 4
 
 NodeHandler nodeHandler(20, 2000);
 ServoNode claw(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
