@@ -4,6 +4,7 @@ from beeper import Beeper
 from joystick_packages.msg import Controller
 from roboclaw import RoboClaw
 from steering_calc import SteeringCalc
+from steering.msg import RoverInfo
 
 import math
 import rospy
@@ -29,6 +30,7 @@ class Steering:
 
         rospy.init_node(self.node, anonymous=True)
         rospy.Subscriber(self.topic, Controller, self.callback)
+        self.info_pub = rospy.Publisher("RoverInfo", RoverInfo, queue_size = 10)
         self.rate = rospy.Rate(5)
 
         while not self.roboclaw_connect() and not rospy.is_shutdown():
@@ -58,8 +60,8 @@ class Steering:
             return False
 
     def callback(self, data):
-        if not self.joystick.killswitch == data.killswitch:
-            print("Killswitch {0}".format(data.killswitch))
+        if not self.joystick.touch_button == data.touch_button:
+            print("Killswitch {0}".format(data.touch_button))
 
         if not self.joystick.share == data.share and data.share == 1:
             self.roboclaw_connect()
@@ -68,23 +70,30 @@ class Steering:
             print(self.modes[data.mode % 3])
 
         self.joystick = data
-        self.joystick.killswitch = self.joystick.mode == 3 or self.joystick.killswitch
 
-        if not self.joystick.killswitch:
+        if not self.joystick.touch_button:
             self.steering_calculations[self.joystick.mode % 3](data)
             self.velocity = [self.steering_calc.velocity_left, self.steering_calc.velocity_right, self.steering_calc.velocity_left, self.steering_calc.velocity_right]
             self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
+
+            rover_info = RoverInfo()
+            rover_info.front_left_angle = self.steering_calc.front_left_angle
+            rover_info.front_right_angle = self.steering_calc.front_right_angle
+            rover_info.back_left_angle = self.steering_calc.back_left_angle
+            rover_info.back_right_angle = self.steering_calc.back_right_angle
+            self.info_pub.publish(rover_info);
 
     def start(self):
         [controller.ResetEncoderCnts() for controller in self.controllers]
             
         while not rospy.is_shutdown():
-            if not self.joystick.killswitch and self.__check_batteries():
+            if not self.joystick.touch_button: # and self.__check_batteries():
                 try: 
+                    print(self.velocity)
                     [self.run(controller, velocity) for controller, velocity in zip(self.controllers, self.velocity)]
                     [self.rotate(controller, angle * 70.368) for controller, angle in zip(self.controllers, self.angle)]
-                    [controller.update_current() for controller in self.controllers]
-                except:
+                except Exception, e:
+                    print(e)
                     pass
             else:
                 self.stop_run()
