@@ -30,23 +30,9 @@ Publisher * NodeHandler::getPublisher(int topic)
 
 void NodeHandler::run()
 {
-    Serial.write(ACCEPT_SERIAL);
-    while (!Serial.available() && millis() - this->currentTime < this->timeout)
-    {
-        this->handlePublishers();
-        delay(this->publish_delay);
-    }
-
-    this->currentTime = millis();
-
-    if (Serial.available())
-    {
-        this->handleSubscriber();
-    }
-    else
-    {
-        Serial.flush();
-    }
+    this->handlePublishers();
+    this->handleSubscriber();
+    delay(this->publish_delay);
 }
 
 void NodeHandler::addSubscriber(Subscriber * node)
@@ -75,9 +61,9 @@ bool NodeHandler:: validPublisher(int topic)
 
 void NodeHandler::handlePublishers()
 {
-    for (int topic = 0; topic < this->publisherLength; topic++)
+    for (int topic = 1; topic < this->publisherLength + 1; topic++)
     {
-        this->bytes = this->getPublisher(topic)->getBytes();
+        int bytes = this->getPublisher(topic)->getBytes();
         char * pub_data = this->getPublisher(topic)->run();
 
         // The first byte that publisher run has to send back is whether
@@ -86,10 +72,11 @@ void NodeHandler::handlePublishers()
         {
             Serial.write(SEND_SERIAL);
             Serial.write(topic);
-            Serial.write(this->bytes);
+            Serial.write(bytes);
 
-            for (int i = 1; i < this->bytes; i++) {
-                Serial.write(pub_data[i]);
+            for (int i = 0; i < bytes; i++)
+            {
+                Serial.write(pub_data[i + 1]);
             }
         }
     }
@@ -97,17 +84,21 @@ void NodeHandler::handlePublishers()
 
 void NodeHandler::handleSubscriber()
 {
-    int numTopics = Serial.read();
-    for (int j = 0; j < numTopics; j++)
+    Serial.write(ACCEPT_SERIAL);
+    if (Serial.available())
     {
-        int topic = Serial.read();
-        if (this->validSubscriber(topic))
+        int numTopics = Serial.read();
+        for (int j = 0; j < numTopics; j++)
         {
-            for (int i = 0; i < this->getSubscriber(topic)->getBytes(); i++)
+            int topic = Serial.read();
+            if (this->validSubscriber(topic))
             {
-                this->data[i] = (int) Serial.read();
+                for (int i = 0; i < this->getSubscriber(topic)->getBytes(); i++)
+                {
+                    this->data[i] = (int) Serial.read();
+                }
+                this->getSubscriber(topic)->run(this->data);
             }
-            this->getSubscriber(topic)->run(this->data);
         }
     }
 }

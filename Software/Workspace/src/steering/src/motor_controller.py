@@ -4,7 +4,7 @@ from beeper import Beeper
 from joystick_packages.msg import Controller
 from roboclaw import RoboClaw
 from steering_calc import SteeringCalc
-from steering.msg import RoverInfo
+from steering.msg import RoverInfo, HomingInfo
 
 import math
 import rospy
@@ -18,6 +18,7 @@ class Steering:
         self.SAFETY_CONSTANT = 0.07
 
         self.joystick = Controller()
+        self.homing = False
         self.node = node
         self.topic = topic
 
@@ -30,13 +31,14 @@ class Steering:
 
         rospy.init_node(self.node, anonymous=True)
         rospy.Subscriber(self.topic, Controller, self.callback)
+        rospy.Subscriber("homing_info", HomingInfo, self.homing_callback)
         self.info_pub = rospy.Publisher("RoverInfo", RoverInfo, queue_size = 10)
         self.rate = rospy.Rate(5)
 
         while not self.roboclaw_connect() and not rospy.is_shutdown():
             self.rate.sleep()
 
-        self.mode = 0
+        self.mode = 1
         self.modes = ["Bicycle", "Strafe", "Turn On Self"]
         self.steering_calc = SteeringCalc(0, 0)
         self.steering_calculations = [self.steering_calc.bicycle, self.steering_calc.strafe, self.steering_calc.turn_onself]
@@ -58,6 +60,24 @@ class Steering:
             return True
         except:
             return False
+
+    def homing_info_callback(self, data):
+        if homing:
+            homed = 0
+            if data.front_left:
+                self.controllerFL.M1Forward(0)
+                homed += 1
+            if data.front_right:
+                self.controllerFR.M1Forward(0)
+                homed += 1
+            if data.back_left:
+                self.controllerBL.M1Forward(0)
+                homed += 1
+            if data.back_right:
+                self.controllerBR.M1Forward(0)
+                homed += 1
+
+            self.homing = False if homed == 4 else self.homing
 
     def callback(self, data):
         if not self.joystick.touch_button == data.touch_button:
@@ -192,6 +212,15 @@ class Steering:
         except:
             traceback.print_exc()
             self.beeper.set(True)
+
+    def start_homing(self):
+        self.homing = True
+        self.controllerFL.M1Backward(10)
+        self.controllerBR.M1Backward(10)
+        self.controllerFR.M1Forward(10)
+        self.controllerBL.M1Forward(10)
+        while self.homing:
+            self.rate.sleep()
 
     def __check_batteries(self):
         try:
