@@ -34,12 +34,14 @@ class Steering:
         while not self.roboclaw_connect() and not rospy.is_shutdown():
             self.rate.sleep()
 
+
         self.mode = 0
         self.modes = ["Bicycle", "Strafe", "Turn On Self"]
         self.steering_calc = SteeringCalc(0, 0)
         self.steering_calculations = [self.steering_calc.bicycle, self.steering_calc.strafe, self.steering_calc.turn_onself]
 
         self.controllers = [self.controllerFL, self.controllerFR, self.controllerBL, self.controllerBR]
+        self.roboclaw_set_param()
         self.velocity = [0, 0, 0, 0]
         self.angle = [0, 0, 0, 0]
 
@@ -59,19 +61,19 @@ class Steering:
 
     def roboclaw_set_param(self):
         #These values are experimentally determined
-        P_CONST = 1
-        I_CONST = 0.1
+        P_CONST = 0x10000
+        I_CONST = 0 #int(0.05)
         D_CONST = 0
         QPPS = 50000
 
         for controller in self.controllers:
 
             #set the constants for speed control
-            controller.setM2pidq(P_CONST, I_CONST, D_CONST, QPPS)
+            controller.SetM2pidq(P_CONST, I_CONST, D_CONST, QPPS)
 
     def callback(self, data):
-        if not self.joystick.killswitch == data.killswitch:
-            print("Killswitch {0}".format(data.killswitch))
+        if not self.joystick.touch_button == data.touch_button:
+            print("Killswitch {0}".format(data.touch_button))
 
         if not self.joystick.share == data.share and data.share == 1:
             self.roboclaw_connect()
@@ -80,9 +82,9 @@ class Steering:
             print(self.modes[data.mode % 3])
 
         self.joystick = data
-        self.joystick.killswitch = self.joystick.mode == 3 or self.joystick.killswitch
+        self.joystick.touch_button = self.joystick.mode == 3 or self.joystick.touch_button
 
-        if not self.joystick.killswitch:
+        if not self.joystick.touch_button:
             self.steering_calculations[self.joystick.mode % 3](data)
             self.velocity = [self.steering_calc.velocity_left, self.steering_calc.velocity_right, self.steering_calc.velocity_left, self.steering_calc.velocity_right]
             self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
@@ -91,7 +93,7 @@ class Steering:
         [controller.ResetEncoderCnts() for controller in self.controllers]
             
         while not rospy.is_shutdown():
-            if not self.joystick.killswitch and self.__check_batteries():
+            if not self.joystick.touch_button and self.__check_batteries():
                 try: 
                     [self.run(controller, velocity) for controller, velocity in zip(self.controllers, self.velocity)]
                     [self.rotate(controller, angle * 70.368) for controller, angle in zip(self.controllers, self.angle)]
@@ -143,11 +145,11 @@ class Steering:
        #      self.stop_run()
        #      traceback.print_exc()
 
-        CONST_ACCEL = 25000 #in the same unit as QPPS
+        CONST_ACCEL = 100000 #in the same unit as QPPS
 
         try:
             if target_speed > 10 or target_speed < -10:
-                controller.SetM2SpeedAccel(CONST_ACCEL, self.map(target_speed, -90, 90, -10000, 10000)
+                controller.SetM2SpeedAccel(CONST_ACCEL, int(self.map(target_speed, -90, 90, -20000, 20000)))
             else:
                 controller.SetM2SpeedAccel(CONST_ACCEL, 0)
         except:
@@ -155,7 +157,7 @@ class Steering:
             traceback.print_exc()
 
 
-    def map(value, leftMin, leftMax, rightMin, rightMax):
+    def map(self, value, leftMin, leftMax, rightMin, rightMax):
         # Figure out how 'wide' each range is
         leftSpan = leftMax - leftMin
         rightSpan = rightMax - rightMin
