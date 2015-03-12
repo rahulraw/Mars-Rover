@@ -1,0 +1,4 @@
+int8 front_left_angle
+int8 front_right_angle
+int8 back_left_angle
+int8 back_right_angle
