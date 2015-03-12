@@ -16,7 +16,7 @@
 #define HOME_BACK_RIGHT 1
 #define HOME_FRONT_RIGHT 2
 #define HOME_BACK_LEFT 3
-#define HOME_FRONT_LEFT 4
+#define HOME_FRONT_LEFT 5
 
 NodeHandler nodeHandler(20, 2000);
 ServoNode claw(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
