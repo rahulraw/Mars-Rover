@@ -94,7 +94,7 @@ class cameraWidget(QtGui.QWidget):
         # self.cameraBox.addLayout(self.buttonLayout)
         
         self.setLayout(self.cameraBox)
-        self.startCamera()
+        # self.startCamera()
 
     def startCamera(self):
         self.cameraThread = camThread()
