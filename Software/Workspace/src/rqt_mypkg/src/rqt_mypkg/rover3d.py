@@ -14,6 +14,8 @@ class GLWidget(QtOpenGL.QGLWidget):
     def __init__(self, parent=None):
         super(GLWidget, self).__init__(parent)
 
+        self.setFixedSize(300,300)
+
         self.gear1 = 0
         self.gear2 = 0
         self.gear3 = 0

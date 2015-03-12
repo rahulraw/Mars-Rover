@@ -54,7 +54,6 @@ class MainWindow(QMainWindow):
 
 		# 3D Orientation Widget
         self.glWidget = GLWidget()
-        self.glWidget.setFixedSize(300,300)
         # self.glWidgetArea = QtGui.QScrollArea()
         # self.glWidgetArea.setWidget(self.glWidget)
         # self.glWidgetArea.setWidgetResizable(True)
@@ -65,7 +64,6 @@ class MainWindow(QMainWindow):
         
         # Orientation Widget
         self.orientWidget = OrientWidget()
-        self.orientWidget.setFixedSize(300,300)
 
         # self.orientWidgetArea = QtGui.QScrollArea()
         # self.orientWidgetArea.setWidget(self.orientWidget)
@@ -92,8 +90,8 @@ class MainWindow(QMainWindow):
         centralLayout.addWidget(self.glWidget, 0, 0, 1, 1)
         centralLayout.addWidget(self.orientWidget, 1, 0, 1, 1)
         centralLayout.addWidget(self.camWidget, 0, 1, 2, 1)
-        # centralLayout.addWidget(self.pb_imu, 1, 1)
-        # centralLayout.addWidget(self.pb_cam_start, 2, 1)        
+        centralLayout.addWidget(self.pb_imu, 0, 3, 1, 1)
+        centralLayout.addWidget(self.pb_cam_start, 1, 3, 1, 1)        
         centralWidget.setLayout(centralLayout)
 
         self.setWindowTitle("Arthrobot Main Window")
@@ -137,5 +135,6 @@ class MainWindow(QMainWindow):
         
     def _handle_pb_cam_start_clicked(self):
         self.camWidget.startCamera()
+
 		
         

@@ -19,7 +19,6 @@ class imu_dialog():
         self._dialog = loadUi(imu_file)
 
     def updateImu(self, data):
-        #self._dialog.label.setText(str(data.orientation.x))
         # Quaternion values
         self._dialog.lineEdit_Quat_x.setText(QtGui.QString(str(data.orientation.x)))
         self._dialog.lineEdit_Quat_y.setText(QtGui.QString(str(data.orientation.y)))
