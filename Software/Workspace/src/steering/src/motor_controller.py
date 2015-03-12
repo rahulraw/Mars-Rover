@@ -61,7 +61,7 @@ class Steering:
         except:
             return False
 
-    def homing_info_callback(self, data):
+    def homing_callback(self, data):
         if homing:
             homed = 0
             if data.front_left:
