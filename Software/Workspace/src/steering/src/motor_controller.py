@@ -128,19 +128,44 @@ class Steering:
             pass
 
     def run(self, controller, target_speed):
+       # try:
+       #      controller.speed += int((target_speed - controller.speed) * self.SAFETY_CONSTANT)
+       #      controller.speed /= (90 - self.joystick.left_brake) / 70 + 1
 
-        CONST_ACCEL = 100000 #in the same unit as QPPS
+       #      if controller.speed > 10:
+       #          controller.M2Forward(controller.speed)
+       #      elif controller.speed < -10:
+       #          controller.M2Backward(abs(controller.speed))
+       #      else:
+       #          controller.M2Forward(0)
+       #          controller.M2Backward(0)
+       #  except:
+       #      self.stop_run()
+       #      traceback.print_exc()
+
+        CONST_ACCEL = 25000 #in the same unit as QPPS
 
         try:
-            if target_speed > 10:
-                controller.SetM2SpeedAccel(CONST_ACCEL, target_speed)
-            elif target_speed < -10:
-                controller.SetM2SpeedAccel(CONST_ACCEL, abs(target_speed))
+            if target_speed > 10 or target_speed < -10:
+                controller.SetM2SpeedAccel(CONST_ACCEL, self.map(target_speed, -90, 90, -10000, 10000)
             else:
                 controller.SetM2SpeedAccel(CONST_ACCEL, 0)
         except:
             self.stop_run()
             traceback.print_exc()
+
+
+    def map(value, leftMin, leftMax, rightMin, rightMax):
+        # Figure out how 'wide' each range is
+        leftSpan = leftMax - leftMin
+        rightSpan = rightMax - rightMin
+
+        # Convert the left range into a 0-1 range (float)
+        valueScaled = float(value - leftMin) / float(leftSpan)
+
+        # Convert the 0-1 range into a value in the right range.
+        return rightMin + (valueScaled * rightSpan)
+
 
     def rotate(self, controller, num_ticks):
         try:
