@@ -44,6 +44,7 @@ class Steering:
         self.steering_calculations = [self.steering_calc.bicycle, self.steering_calc.strafe, self.steering_calc.turn_onself]
 
         self.controllers = [self.controllerFL, self.controllerFR, self.controllerBL, self.controllerBR]
+        self.roboclaw_set_param()
         self.velocity = [0, 0, 0, 0]
         self.angle = [0, 0, 0, 0]
 
@@ -173,17 +174,13 @@ class Steering:
             traceback.print_exc()
 
     def run(self, controller, target_speed):
-        try:
-            controller.speed += int((target_speed - controller.speed) * self.SAFETY_CONSTANT)
-            controller.speed /= (90 - self.joystick.left_brake) / 70 + 1
+        CONST_ACCEL = 50000
 
-            if controller.speed > 10:
-                controller.M2Forward(controller.speed)
-            elif controller.speed < -10:
-                controller.M2Backward(abs(controller.speed))
+        try:
+            if target_speed > 10 or target_speed < -10:
+                controller.SetM2SpeedAccel(CONST_ACCEL, int(self.map(target_speed, -90, 90, -20000, 20000)))
             else:
-                controller.M2Forward(0)
-                controller.M2Backward(0)
+                controller.SetM2SpeedAccel(CONST_ACCEL, 0)
         except:
             self.stop_run()
             traceback.print_exc()
@@ -240,6 +237,29 @@ class Steering:
 
     def __convert_True_to_Mod__(self, ticks):
         return ticks - 2**32 if ticks > 2**31 else ticks
+
+    def roboclaw_set_param(self):
+        #These values are experimentally determined
+        P_CONST = int(1 * 65536)
+        I_CONST = int(0.05 * 65536)
+        D_CONST = int(0 * 65536)
+        QPPS = 50000
+
+        for controller in self.controllers:
+
+            #set the constants for speed control
+            controller.SetM2pidq(P_CONST, I_CONST, D_CONST, QPPS)
+
+    def map(self, value, leftMin, leftMax, rightMin, rightMax):
+        # Figure out how 'wide' each range is
+        leftSpan = leftMax - leftMin
+        rightSpan = rightMax - rightMin
+
+        # Convert the left range into a 0-1 range (float)
+        valueScaled = float(value - leftMin) / float(leftSpan)
+
+        # Convert the 0-1 range into a value in the right range.
+        return rightMin + (valueScaled * rightSpan)
 
 if __name__ == '__main__':
     args = ["RCValues", "RoboClaw"]
