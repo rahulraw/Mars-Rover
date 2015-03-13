@@ -11,12 +11,12 @@
 
 #define PULSE_WIDTH_MAX 1400
 #define PULSE_WIDTH_MIN 900
-#define RELAY_PIN 4
+#define RELAY_PIN 49
 
-#define HOME_BACK_RIGHT 1
-#define HOME_FRONT_RIGHT 2
-#define HOME_BACK_LEFT 3
-#define HOME_FRONT_LEFT 5
+#define HOME_BACK_RIGHT 50
+#define HOME_FRONT_RIGHT 51
+#define HOME_BACK_LEFT 52
+#define HOME_FRONT_LEFT 53
 
 NodeHandler nodeHandler(20, 2000);
 ServoNode claw(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
