@@ -6,10 +6,12 @@ import time
 import math
 
 class RoboClaw:
-    def __init__(self, deviceId = '/dev/ttyACM1'):
+    def __init__(self, deviceId = '/dev/ttyACM1', rotation_orientation = 1):
         self.checksum = 0
         self.port = serial.Serial(deviceId, baudrate=38400, timeout=1)
         self.speed = 0
+        self.offset = 0
+        self.rotation_orientation = rotation_orientation
 
     def reconnect(self):
         self.port.close()

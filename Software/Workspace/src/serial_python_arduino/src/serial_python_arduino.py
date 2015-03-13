@@ -80,7 +80,7 @@ class Arduino:
     def setup_topics(self):
         rospy.Subscriber("RCValues", Controller, self.callback_claw, queue_size=1)
         rospy.Subscriber("shutoff", Bool, self.callback_auto_shut_down, queue_size=1)
-        self.homing_pub = rospy.Publisher("RoverInfo", HomingInfo, queue_size=1)
+        self.homing_pub = rospy.Publisher("homing_info", HomingInfo, queue_size=1)
 
     def _read_byte(self):
         return struct.unpack('B', self.ser.read(1))[0]

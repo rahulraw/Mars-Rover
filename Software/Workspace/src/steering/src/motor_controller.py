@@ -53,16 +53,16 @@ class Steering:
     def roboclaw_connect(self):
         try:
             print("Connecting to Roboclaws...")
-            self.controllerFL = RoboClaw("/dev/roboclawfl")
-            self.controllerFR = RoboClaw("/dev/roboclawfr")
-            self.controllerBL = RoboClaw("/dev/roboclawbl")
-            self.controllerBR = RoboClaw("/dev/roboclawbr")
+            self.controllerFL = RoboClaw("/dev/roboclawfl", 1)
+            self.controllerFR = RoboClaw("/dev/roboclawfr", -1)
+            self.controllerBL = RoboClaw("/dev/roboclawbl", -1)
+            self.controllerBR = RoboClaw("/dev/roboclawbr", 1)
             return True
         except:
             return False
 
     def homing_callback(self, data):
-        if homing:
+        if self.homing:
             homed = 0
             if data.front_left:
                 self.controllerFL.M1Forward(0)
@@ -77,7 +77,7 @@ class Steering:
                 self.controllerBR.M1Forward(0)
                 homed += 1
 
-            self.homing = False if homed == 4 else self.homing
+            self.homing = False if homed == 1 else self.homing
 
     def callback(self, data):
         if not self.joystick.touch_button == data.touch_button:
@@ -85,6 +85,9 @@ class Steering:
 
         if not self.joystick.share == data.share and data.share == 1:
             self.roboclaw_connect()
+
+        if data.options != self.joystick.options and data.options == 1:
+            self.homing = True
 
         if data.mode != self.joystick.mode:
             print(self.modes[data.mode % 3])
@@ -109,9 +112,17 @@ class Steering:
         while not rospy.is_shutdown():
             if not self.joystick.touch_button: # and self.__check_batteries():
                 try: 
-                    print(self.velocity)
-                    [self.run(controller, velocity) for controller, velocity in zip(self.controllers, self.velocity)]
-                    [self.rotate(controller, angle * 70.368) for controller, angle in zip(self.controllers, self.angle)]
+                    if (self.homing):
+                        self.controllerFL.M1Backward(10)
+                        self.controllerBR.M1Backward(10)
+                        self.controllerFR.M1Forward(10)
+                        self.controllerBL.M1Forward(10)
+                        while self.homing and not rospy.is_shutdown():
+                            self.rate.sleep()
+                        self.finish_homing()
+                    else:
+                        [self.run(controller, velocity) for controller, velocity in zip(self.controllers, self.velocity)]
+                        [self.rotate(controller, angle * 70.368) for controller, angle in zip(self.controllers, self.angle)]
                 except Exception, e:
                     print(e)
                     pass
@@ -127,7 +138,6 @@ class Steering:
                 self.print_controller("Back Right", self.controllerBR, self.steering_calc.back_right_angle)
             if self.joystick.x:
                 self.print_controller("Back Left", self.controllerBL, self.steering_calc.back_left_angle)
-        
             self.rate.sleep()
 
         self.stop_run()
@@ -180,7 +190,7 @@ class Steering:
 
     def rotate(self, controller, num_ticks):
         try:
-            error = num_ticks - self.__convert_True_to_Mod__(controller.readM1encoder()[0])
+            error = num_ticks - self.__convert_True_to_Mod__(controller.readM1encoder()[0]) + controller.offset
             motorValue = max(-20, min(20, int((error) * self.proportionalConstant)))
 
             if abs(error) <= self.errorThres or num_ticks > 180 * 70.368:
@@ -213,14 +223,10 @@ class Steering:
             traceback.print_exc()
             self.beeper.set(True)
 
-    def start_homing(self):
-        self.homing = True
-        self.controllerFL.M1Backward(10)
-        self.controllerBR.M1Backward(10)
-        self.controllerFR.M1Forward(10)
-        self.controllerBL.M1Forward(10)
-        while self.homing:
-            self.rate.sleep()
+    def finish_homing(self):
+
+        for controller in self.controllers:
+            controller.offset = self.__convert_True_to_Mod__(controller.readM1encoder()[0]) + (90 * 70.368) * controller.rotation_orientation
 
     def __check_batteries(self):
         try:
