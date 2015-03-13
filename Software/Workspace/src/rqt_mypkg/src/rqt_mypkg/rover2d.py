@@ -1,76 +1,69 @@
+#Embedded file name: /home/jerbotron/Documents/uwrobotics.uwmrt/Software/Workspace/src/rqt_mypkg/src/rqt_mypkg/rover2d.py
 import math, numpy
 import rospy
 import sys
-
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
 from steering.msg import RoverInfo
 
 class OrientWidget(QtGui.QWidget):
-    
-    def __init__(self, parent=None):
+
+    def __init__(self, parent = None):
         super(OrientWidget, self).__init__(parent)
-
-        rospy.Subscriber("RoverInfo", RoverInfo, self._wheel_slider_moved)
-
+        rospy.Subscriber('RoverInfo', RoverInfo, self._wheel_slider_moved)
         self.createScrollbars()
 
         self.incline = 0.0
-        self.topLeftWheelAngle = 25.0
-        self.topRightWheelAngle = 45.0
-        self.botLeftWheelAngle = 60.0
-        self.botRightWheelAngle = 90.0
-        self.mode = "default"
+        self.topLeftWheelAngle = 0.0
+        self.topRightWheelAngle = 0.0
+        self.botLeftWheelAngle = 0.0
+        self.botRightWheelAngle = 0.0
+        self.mode = 'default'
 
         self.topViewX = 35
         self.topViewY = 35
-        self.topViewWidgth = 50
+        self.topViewWidth = 50
         self.topViewHeight = 75
         self.topLeftWheel = QPoint(self.topViewX, self.topViewY)
-        self.topRightWheel = QPoint(self.topViewX+self.topViewWidgth, self.topViewY)
-        self.botLeftWheel = QPoint(self.topViewX, self.topViewY+self.topViewHeight)
-        self.botRightWheel = QPoint(self.topViewX+self.topViewWidgth, self.topViewY+self.topViewHeight)
+        self.topRightWheel = QPoint(self.topViewX + self.topViewWidth, self.topViewY)
+        self.botLeftWheel = QPoint(self.topViewX, self.topViewY + self.topViewHeight)
+        self.botRightWheel = QPoint(self.topViewX + self.topViewWidth, self.topViewY + self.topViewHeight)
         self.wheelWidth = 20
         self.wheelHeight = 30
         self.wheelRadius = 7.0
 
-        self.sideViewX = 115
+        self.sideViewX = 30
         self.sideViewY = 200
-        self.sideViewWidgth = 75
+        self.sideViewWidth = 75
         self.sideViewHeight = 35
+        self.sideRadius = 25
+        self.frontWheel = QPoint(self.sideViewX + self.sideViewWidth, self.sideViewY + self.sideViewHeight)
+        self.backWheel = QPoint(self.sideViewX, self.sideViewY + self.sideViewHeight)
 
-        self.topView = QtCore.QRect(self.topViewX,self.topViewY,self.topViewWidgth,self.topViewHeight)
-        self.sideView = QtCore.QRect(self.sideViewX,self.sideViewY,self.sideViewWidgth,self.sideViewHeight)
-        
+        self.topView = QtCore.QRect(self.topViewX, self.topViewY, self.topViewWidth, self.topViewHeight)
+        self.sideView = QtCore.QRect(self.sideViewX, self.sideViewY, self.sideViewWidth, self.sideViewHeight)
+
         self.brush = QtGui.QBrush()
         self.setBrush(QtCore.Qt.NoBrush)
-        
         self.style = QtCore.Qt.BrushStyle(QtCore.Qt.Dense1Pattern)
-        
         self.setBackgroundRole(QtGui.QPalette.Base)
         self.setAutoFillBackground(True)
-
         centralLayout = QtGui.QFormLayout()
-        # centralLayout.addWidget(self.scrollbar_wheel)
         self.setLayout(centralLayout)
 
-        self.setFixedSize(300,300)
-        self.size = self.size()
-        self.width = self.size.width()
-        self.height = self.size.height()
+        self.setFixedSize(300, 300)
 
     def setBrush(self, brush):
         self.brush = brush
         self.update()
-        
+
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
         painter.setPen(Qt.black)
         painter.setBrush(self.brush)
-        
         self.updateTopOrientation(painter)
+        self.drawRover2DSide(painter)
 
     def updateTopOrientation(self, p):
         self.drawRover2DTop(p)
@@ -81,46 +74,44 @@ class OrientWidget(QtGui.QWidget):
 
     def drawRover2DTop(self, p):
         p.setPen(Qt.black)
-        p.setBrush(QtGui.QBrush(QtCore.Qt.gray, self.style)) 
+        p.setBrush(QtGui.QBrush(QtCore.Qt.gray, self.style))
         p.drawRect(self.topView)
-        p.drawText(QPoint(self.topViewX + 100,self.topViewY),"Top Left: "+str(self.topLeftWheelAngle) + " deg")
-        p.drawText(QPoint(self.topViewX + 100,self.topViewY + 25),"Top Right: "+str(self.topRightWheelAngle) + " deg")
-        p.drawText(QPoint(self.topViewX + 100,self.topViewY + 50),"Bottom Left: "+str(self.botLeftWheelAngle) + " deg")
-        p.drawText(QPoint(self.topViewX + 100,self.topViewY + 75),"Bottom Right: "+str(self.botRightWheelAngle) + " deg")
-        p.drawText(QPoint(self.topViewX + 100,self.topViewY + 100),"Mode: "+ self.mode)
+        p.drawText(QPoint(self.topViewX + 100, self.topViewY), 'Top Left: ' + str(self.topLeftWheelAngle) + ' deg')
+        p.drawText(QPoint(self.topViewX + 100, self.topViewY + 25), 'Top Right: ' + str(self.topRightWheelAngle) + ' deg')
+        p.drawText(QPoint(self.topViewX + 100, self.topViewY + 50), 'Bottom Left: ' + str(self.botLeftWheelAngle) + ' deg')
+        p.drawText(QPoint(self.topViewX + 100, self.topViewY + 75), 'Bottom Right: ' + str(self.botRightWheelAngle) + ' deg')
+        p.drawText(QPoint(self.topViewX + 100, self.topViewY + 100), 'Mode: ' + self.mode)
 
     def drawWheelOrientation(self, p, wheel, angle):
         p.setPen(Qt.black)
         p.setBrush(QtGui.QBrush(QtCore.Qt.red, self.style))
-
-        theta = -angle*math.pi/180
-        coord = numpy.array([wheel.x(),wheel.y()])
-        rotMatrix = numpy.array([[numpy.cos(theta), -numpy.sin(theta)], 
-                         [numpy.sin(theta),  numpy.cos(theta)]])
-        coord2 = numpy.dot(rotMatrix,coord)
+        theta = -angle * math.pi / 180
+        coord = numpy.array([wheel.x(), wheel.y()])
+        rotMatrix = numpy.array([[numpy.cos(theta), -numpy.sin(theta)], [numpy.sin(theta), numpy.cos(theta)]])
+        coord2 = numpy.dot(rotMatrix, coord)
         dx = coord2[0] - coord[0]
         dy = coord2[1] - coord[1]
         p.rotate(angle)
-        p.translate(dx,dy)
-        p.drawRoundedRect(coord[0] - self.wheelWidth/2, coord[1] - self.wheelHeight/2, self.wheelWidth, self.wheelHeight, self.wheelRadius, self.wheelRadius)
-        p.translate(-dx,-dy)
+        p.translate(dx, dy)
+        p.drawRoundedRect(coord[0] - self.wheelWidth / 2, coord[1] - self.wheelHeight / 2, self.wheelWidth, self.wheelHeight, self.wheelRadius, self.wheelRadius)
+        p.translate(-dx, -dy)
         p.rotate(-angle)
 
-    def drawRover2DSide(self,p):
+    def drawRover2DSide(self, p):
         p.setPen(Qt.black)
-        p.setBrush(QtGui.QBrush(QtCore.Qt.gray, self.style)) 
+        p.setBrush(QtGui.QBrush(QtCore.Qt.gray, self.style))
         p.drawRect(self.sideView)
         p.setBrush(QtGui.QBrush(QtCore.Qt.red, self.style))
-        # p.drawEllipse(250,150, 50, 50)
-        # p.drawEllipse(400,150, 50, 50)
-        p.drawText(QPoint(50,290),"Rover Incline: "+str(self.incline) + " deg")
+        p.drawEllipse(self.backWheel.x() - self.sideRadius/2, self.backWheel.y() - self.sideRadius/2, self.sideRadius, self.sideRadius)
+        p.drawEllipse(self.frontWheel.x() - self.sideRadius/2, self.frontWheel.y() - self.sideRadius/2, self.sideRadius, self.sideRadius)
+        p.drawText(self.sideViewX + 110, self.sideViewY, 'Rover Incline: ' + str(self.incline) + ' deg')
 
     def createScrollbars(self):
         self.scrollbar_wheel = QtGui.QScrollBar()
         self.scrollbar_wheel.setOrientation(QtCore.Qt.Horizontal)
         self.scrollbar_wheel.setMinimum(0)
         self.scrollbar_wheel.setMaximum(360)
-        self.scrollbar_wheel.connect(self.scrollbar_wheel, QtCore.SIGNAL("sliderMoved(int)"), self._wheel_slider_moved)
+        self.scrollbar_wheel.connect(self.scrollbar_wheel, QtCore.SIGNAL('sliderMoved(int)'), self._wheel_slider_moved)
 
     def _wheel_slider_moved(self, value):
         self.topLeftWheelAngle = float(value.front_left_angle)
@@ -129,5 +120,3 @@ class OrientWidget(QtGui.QWidget):
         self.botRightWheelAngle = float(value.back_right_angle)
         self.mode = value.mode
         self.update()
-
-    

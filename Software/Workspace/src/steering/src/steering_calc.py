@@ -20,7 +20,7 @@ class SteeringCalc:
         self.velocity_right = 0
         self.chassis_length = 0.512 
         self.chassis_width = 0.512 
-        self.safety_constant = 0.6
+        self.safety_constant = 0.5
 
     def turn_onself(self, controller):
         self.front_left_angle = 45

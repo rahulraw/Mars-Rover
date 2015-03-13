@@ -34,7 +34,6 @@ class NodeHandler
         Publisher * publishers[4];
 
         int topic;
-        int bytes;
         int publish_delay;
         int timeout;
         unsigned long currentTime;
