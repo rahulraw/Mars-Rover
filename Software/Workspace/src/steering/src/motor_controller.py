@@ -41,7 +41,7 @@ class Steering:
         self.steering_calc = SteeringCalc(0, 0)
         self.steering_calculations = [self.steering_calc.bicycle, self.steering_calc.strafe, self.steering_calc.turn_onself]
 
-        self.controllers = [self.controllerFL, self.controllerFR, self.controllerBL, self.controllerBR]
+        self.controllers = [] #[self.controllerFL, self.controllerFR, self.controllerBL, self.controllerBR]
         self.velocity = [0, 0, 0, 0]
         self.angle = [0, 0, 0, 0]
 
@@ -51,10 +51,10 @@ class Steering:
     def roboclaw_connect(self):
         try:
             print("Connecting to Roboclaws...")
-            self.controllerFL = RoboClaw("/dev/roboclawfl")
-            self.controllerFR = RoboClaw("/dev/roboclawfr")
-            self.controllerBL = RoboClaw("/dev/roboclawbl")
-            self.controllerBR = RoboClaw("/dev/roboclawbr")
+            # self.controllerFL = RoboClaw("/dev/roboclawfl")
+            # self.controllerFR = RoboClaw("/dev/roboclawfr")
+            # self.controllerBL = RoboClaw("/dev/roboclawbl")
+            # self.controllerBR = RoboClaw("/dev/roboclawbr")
             return True
         except:
             return False
@@ -81,6 +81,7 @@ class Steering:
             rover_info.front_right_angle = self.steering_calc.front_right_angle
             rover_info.back_left_angle = self.steering_calc.back_left_angle
             rover_info.back_right_angle = self.steering_calc.back_right_angle
+            rover_info.mode = self.modes[data.mode % 3]
             self.info_pub.publish(rover_info);
 
     def start(self):

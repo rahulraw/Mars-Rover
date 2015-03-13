@@ -1,228 +1,407 @@
 #!/usr/bin/env python
-
-import sys
-import math
+import sys, math, numpy, tf
+import rospy, rospkg
 
 from PyQt4 import QtCore, QtGui, QtOpenGL
-from OpenGL.GL import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+from OpenGL import GL
+
+from sensor_msgs.msg import Imu
+
+try:  
+    from PyQt4.QtCore import QString  
+except ImportError:  
+    # we are using Python3 so QString is not defined  
+    QString = str 
+
+class imuThread(QtCore.QThread):
+    def __init__(self):
+        QtCore.QThread.__init__(self)
+
+    def run(self):
+        print("imu thread run")
+        rospy.Subscriber("/imu/data", Imu, self.callback)
+        
+    def callback(self, data):
+        self.emit(QtCore.SIGNAL('updateImu(PyQt_PyObject)'), data)
+
+class Window(QtGui.QWidget):
+    def __init__(self):
+        super(Window, self).__init__()
+
+        self.glWidget = GLWidget()
+
+        # self.xSlider = self.createSlider()
+        # self.ySlider = self.createSlider()
+        # self.zSlider = self.createSlider()
+
+        # self.xSlider.valueChanged.connect(self.glWidget.setXRotation)
+        # self.glWidget.xRotationChanged.connect(self.xSlider.setValue)
+        # self.ySlider.valueChanged.connect(self.glWidget.setYRotation)
+        # self.glWidget.yRotationChanged.connect(self.ySlider.setValue)
+        # self.zSlider.valueChanged.connect(self.glWidget.setZRotation)
+        # self.glWidget.zRotationChanged.connect(self.zSlider.setValue)
+
+        mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addWidget(self.glWidget)
+        # mainLayout.addWidget(self.xSlider)
+        # mainLayout.addWidget(self.ySlider)
+        # mainLayout.addWidget(self.zSlider)
+        self.setLayout(mainLayout)
+
+        # self.xSlider.setValue(15 * 16)
+        # self.ySlider.setValue(345 * 16)
+        # self.zSlider.setValue(0 * 16)
+
+        self.setWindowTitle("Hello GL")
+
+    # def createSlider(self):
+    #     slider = QtGui.QSlider(QtCore.Qt.Vertical)
+
+    #     slider.setRange(0, 360 * 16)
+    #     slider.setSingleStep(16)
+    #     slider.setPageStep(15 * 16)
+    #     slider.setTickInterval(15 * 16)
+    #     slider.setTickPosition(QtGui.QSlider.TicksRight)
+
+    #     return slider
 
 class GLWidget(QtOpenGL.QGLWidget):
-    xRotationChanged = QtCore.pyqtSignal(int)
-    yRotationChanged = QtCore.pyqtSignal(int)
-    zRotationChanged = QtCore.pyqtSignal(int)
+    # xRotationChanged = QtCore.pyqtSignal(float)
+    # yRotationChanged = QtCore.pyqtSignal(float)
+    # zRotationChanged = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None):
         super(GLWidget, self).__init__(parent)
 
-        self.setFixedSize(300,300)
-
-        self.gear1 = 0
-        self.gear2 = 0
-        self.gear3 = 0
+        self.object = 0
         self.xRot = 0
         self.yRot = 0
         self.zRot = 0
-        self.gear1Rot = 0
 
-        timer = QtCore.QTimer(self)
-        timer.timeout.connect(self.advanceGears)
-        timer.start(20)
+        self.roll = 0.0
+        self.prev_roll = 0.0
+        self.roll_offset = 0.0
+
+        self.pitch = 0.0
+        self.prev_pitch = 0.0
+        self.pitch_offset = 0.0
+
+        self.yaw = 0.0
+        self.prev_yaw = 0.0
+        self.yaw_offset = 0.0
+
+        self.lastPos = QtCore.QPoint()
+
+        self.trolltechGreen = QtGui.QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
+        self.trolltechPurple = QtGui.QColor.fromCmykF(0.39, 0.39, 0.0, 0.0)
+        self.scrubjerryred = QtGui.QColor.fromCmykF(0, 1.0, 1.0, 0.0)
+        self.kevinblue = QtGui.QColor.fromCmykF(1.0 , 1.0, 0.0, 0.0)
+        self.archieyellow = QtGui.QColor.fromCmykF(0.0, 0.0, 1.0, 0.0)
+        self.petercyan = QtGui.QColor.fromCmykF(1.0, 0.0, 0.0, 0.0)
+        self.magenta = QtGui.QColor.fromCmykF(0.0, 1.0, 0.0, 0.0)
+
+        # self.setXRotation(45*16)
+
+        self.startImu()
+
+    def startImu(self):
+        self.imuT = imuThread()
+        self.connect(self.imuT, QtCore.SIGNAL('updateImu(PyQt_PyObject)'), self.updateImu, Qt.QueuedConnection)
+        self.imuT.start()
+
+    def normalizeAngle(self, angle):
+        while angle < 0:
+            angle += 360 * 16
+        while angle > 360 * 16:
+            angle -= 360 * 16
+        return angle
+
+    def updateImu(self, data):
+        self.prev_roll = self.roll
+        self.prev_pitch = self.pitch
+        self.prev_yaw = self.yaw
+
+        quaternion = (
+            data.orientation.x,
+            data.orientation.y,
+            data.orientation.z,
+            data.orientation.w)
+        euler = tf.transformations.euler_from_quaternion(quaternion)
+        self.roll = euler[0] * 180 / math.pi + 180 + self.roll_offset
+        self.pitch = euler[1] * 180 / math.pi + 180 + self.pitch_offset
+        self.yaw = euler[2] * 180 / math.pi + 180 + self.yaw_offset
+
+        # print("roll = " + str(self.roll) + " | pitch = " + str(self.pitch) + " | yaw = " + str(self.yaw))
+
+        if (int(self.roll) != int(self.prev_roll)):
+            self.setXRotation(self.roll * 16)
+        if (int(self.pitch) != int(self.prev_pitch)):
+            self.setYRotation(self.pitch * 16)
+        if (int(self.yaw) != int(self.prev_yaw)):
+            self.setZRotation(self.yaw * 16)
+
+    def minimumSizeHint(self):
+        return QtCore.QSize(50, 50)
+
+    def sizeHint(self):
+        return QtCore.QSize(400, 400)
 
     def setXRotation(self, angle):
-        self.normalizeAngle(angle)
-
+        angle = self.normalizeAngle(angle)
         if angle != self.xRot:
             self.xRot = angle
-            self.xRotationChanged.emit(angle)
+            # self.xRotationChanged.emit(angle)
             self.updateGL()
 
     def setYRotation(self, angle):
-        self.normalizeAngle(angle)
-
+        angle = self.normalizeAngle(angle)
         if angle != self.yRot:
             self.yRot = angle
-            self.yRotationChanged.emit(angle)
+            # self.yRotationChanged.emit(angle)
             self.updateGL()
 
     def setZRotation(self, angle):
-        self.normalizeAngle(angle)
-
+        angle = self.normalizeAngle(angle)
         if angle != self.zRot:
             self.zRot = angle
-            self.zRotationChanged.emit(angle)
+            # self.zRotationChanged.emit(angle)
             self.updateGL()
 
     def initializeGL(self):
-        lightPos = (5.0, 5.0, 10.0, 1.0)
-        reflectance1 = (0.8, 0.1, 0.0, 1.0)
-        reflectance2 = (0.0, 0.8, 0.2, 1.0)
-        reflectance3 = (0.2, 0.2, 1.0, 1.0)
-
-        glLightfv(GL_LIGHT0, GL_POSITION, lightPos)
-        glEnable(GL_LIGHTING)
-        glEnable(GL_LIGHT0)
-        glEnable(GL_DEPTH_TEST)
-
-        self.gear1 = self.makeGear(reflectance1, 1.0, 4.0, 1.0, 0.7, 20)
-        self.gear2 = self.makeGear(reflectance2, 0.5, 2.0, 2.0, 0.7, 10)
-        self.gear3 = self.makeGear(reflectance3, 1.3, 2.0, 0.5, 0.7, 10)
-
-        glEnable(GL_NORMALIZE)
-        glClearColor(0.0, 0.0, 0.0, 1.0)
+        self.qglClearColor(self.trolltechPurple.dark())
+        self.object = self.makeObject()
+        GL.glShadeModel(GL.GL_FLAT)
+        GL.glEnable(GL.GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_CULL_FACE)
 
     def paintGL(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
-        glPushMatrix()
-        glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0)
-        glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
-        glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
-
-        self.drawGear(self.gear1, -3.0, -2.0, 0.0, self.gear1Rot / 16.0)
-        self.drawGear(self.gear2, +3.1, -2.0, 0.0,
-                -2.0 * (self.gear1Rot / 16.0) - 9.0)
-
-        glRotated(+90.0, 1.0, 0.0, 0.0)
-        self.drawGear(self.gear3, -3.1, -1.8, -2.2,
-                +2.0 * (self.gear1Rot / 16.0) - 2.0)
-
-        glPopMatrix()
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        GL.glLoadIdentity()
+        GL.glTranslated(0.0, 0.0, -10.0)
+        GL.glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0)
+        GL.glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
+        GL.glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
+        GL.glCallList(self.object)
 
     def resizeGL(self, width, height):
         side = min(width, height)
         if side < 0:
             return
 
-        glViewport((width - side) // 2, (height - side) // 2, side, side)
+        GL.glViewport((width - side) // 2, (height - side) // 2, side, side)
 
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glFrustum(-1.0, +1.0, -1.0, 1.0, 5.0, 60.0)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glTranslated(0.0, 0.0, -40.0)
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+        GL.glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
+        GL.glMatrixMode(GL.GL_MODELVIEW)
 
-    def mousePressEvent(self, event):
-        self.lastPos = event.pos()
+    # def mousePressEvent(self, event):
+    #     self.lastPos = event.pos()
 
-    def mouseMoveEvent(self, event):
-        dx = event.x() - self.lastPos.x()
-        dy = event.y() - self.lastPos.y()
+    # def mouseMoveEvent(self, event):
+    #     dx = event.x() - self.lastPos.x()
+    #     dy = event.y() - self.lastPos.y()
 
-        if event.buttons() & QtCore.Qt.LeftButton:
-            self.setXRotation(self.xRot + 8 * dy)
-            self.setYRotation(self.yRot + 8 * dx)
-        elif event.buttons() & QtCore.Qt.RightButton:
-            self.setXRotation(self.xRot + 8 * dy)
-            self.setZRotation(self.zRot + 8 * dx)
+    #     if event.buttons() & QtCore.Qt.LeftButton:
+    #         self.setXRotation(self.xRot + 8 * dy)
+    #         self.setYRotation(self.yRot + 8 * dx)
+    #     elif event.buttons() & QtCore.Qt.RightButton:
+    #         self.setXRotation(self.xRot + 8 * dy)
+    #         self.setZRotation(self.zRot + 8 * dx)
 
-        self.lastPos = event.pos()
+    #     self.lastPos = event.pos()
 
-    def advanceGears(self):
-        self.gear1Rot += 2 * 16
-        self.updateGL()    
+    def makeObject(self):
+        genList = GL.glGenLists(1)
+        GL.glNewList(genList, GL.GL_COMPILE)
 
-    def xRotation(self):
-        return self.xRot
+        GL.glBegin(GL.GL_QUADS)
 
-    def yRotation(self):
-        return self.yRot
+        l = 0.2
+        w = 0.1
+        d = 0.2
 
-    def zRotation(self):
-        return self.zRot
+        x1 = -l
+        y1 = -w
+        x2 = l
+        y2 = -w
+        x3 = l
+        y3 = w
+        x4 = -l
+        y4 = w
 
-    def makeGear(self, reflectance, innerRadius, outerRadius, thickness, toothSize, toothCount):
-        list = glGenLists(1)
-        glNewList(list, GL_COMPILE)
-        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, reflectance)
+        self.qglColor(self.trolltechGreen) #back
+        GL.glVertex3d(x1, y1, -d)
+        GL.glVertex3d(x2, y2, -d)
+        GL.glVertex3d(x3, y3, -d)
+        GL.glVertex3d(x4, y4, -d)
 
-        r0 = innerRadius
-        r1 = outerRadius - toothSize / 2.0
-        r2 = outerRadius + toothSize / 2.0
-        delta = (2.0 * math.pi / toothCount) / 4.0
-        z = thickness / 2.0
+        self.qglColor(self.scrubjerryred) #front
+        GL.glVertex3d(x4, y4, d)
+        GL.glVertex3d(x3, y3, d)
+        GL.glVertex3d(x2, y2, d)
+        GL.glVertex3d(x1, y1, d)
 
-        glShadeModel(GL_FLAT)
+        self.qglColor(self.kevinblue) #top
+        GL.glVertex3d(x1, y1, d)
+        GL.glVertex3d(x2, y2, d)
+        GL.glVertex3d(x2, y2, -d)
+        GL.glVertex3d(x1, y1, -d)
 
-        for i in range(2):
-            if i == 0:
-                sign = +1.0
-            else:
-                sign = -1.0
+        self.qglColor(self.archieyellow) #leftside
+        GL.glVertex3d(x1, y1, d)
+        GL.glVertex3d(x1, y1, -d)
+        GL.glVertex3d(x4, y4, -d)
+        GL.glVertex3d(x4, y4, d)
 
-            glNormal3d(0.0, 0.0, sign)
+        self.qglColor(self.petercyan) #rightside
+        GL.glVertex3d(x2, y2, d)
+        GL.glVertex3d(x3, y3, d)
+        GL.glVertex3d(x3, y3, -d)
+        GL.glVertex3d(x2, y2, -d)
 
-            glBegin(GL_QUAD_STRIP)
+        self.qglColor(self.magenta) #bottom
+        GL.glVertex3d(x3, y3, d)
+        GL.glVertex3d(x4, y4, d)
+        GL.glVertex3d(x4, y4, -d)
+        GL.glVertex3d(x3, y3, -d)
 
-            for j in range(toothCount+1):
-                angle = 2.0 * math.pi * j / toothCount
-                glVertex3d(r0 * math.cos(angle), r0 * math.sin(angle), sign * z)
-                glVertex3d(r1 * math.cos(angle), r1 * math.sin(angle), sign * z)
-                glVertex3d(r0 * math.cos(angle), r0 * math.sin(angle), sign * z)
-                glVertex3d(r1 * math.cos(angle + 3 * delta), r1 * math.sin(angle + 3 * delta), sign * z)
 
-            glEnd()
 
-            glBegin(GL_QUADS)
+        #draw wheels
+        #front right wheel: point 3 +d
+        self.drawWheel(x3,y3,d)
+        #back right: p3 -d
+        self.drawWheel(x3,y3,-d)
+        #front left: p4 +d
+        self.drawWheel(x4-0.06,y4,d)
+        #back left: p4 -d
+        self.drawWheel(x4-0.06,y4,-d)
 
-            for j in range(toothCount):
-                angle = 2.0 * math.pi * j / toothCount                
-                glVertex3d(r1 * math.cos(angle), r1 * math.sin(angle), sign * z)
-                glVertex3d(r2 * math.cos(angle + delta), r2 * math.sin(angle + delta), sign * z)
-                glVertex3d(r2 * math.cos(angle + 2 * delta), r2 * math.sin(angle + 2 * delta), sign * z)
-                glVertex3d(r1 * math.cos(angle + 3 * delta), r1 * math.sin(angle + 3 * delta), sign * z)
+        GL.glEnd()
+        GL.glEndList()
 
-            glEnd()
+        return genList
 
-        glBegin(GL_QUAD_STRIP)
+    def drawWheel(self,x,y,d):
+        wl = 0.06
+        ww = 0.04
+        wd = 0.04
 
-        for i in range(toothCount):
-            for j in range(2):
-                angle = 2.0 * math.pi * (i + (j / 2.0)) / toothCount
-                s1 = r1
-                s2 = r2
+        x1 = x
+        x2 = x+wl
+        x3 = x+wl
+        x4 = x
 
-                if j == 1:
-                    s1, s2 = s2, s1
+        y1 = y-ww
+        y2 = y-ww
+        y3 = y+ww
+        y4 = y+ww
 
-                glNormal3d(math.cos(angle), math.sin(angle), 0.0)
-                glVertex3d(s1 * math.cos(angle), s1 * math.sin(angle), +z)
-                glVertex3d(s1 * math.cos(angle), s1 * math.sin(angle), -z)
+        z1 = d-wd
+        z2 = d+wd
 
-                glNormal3d(s2 * math.sin(angle + delta) - s1 * math.sin(angle), s1 * math.cos(angle) - s2 * math.cos(angle + delta), 0.0)
-                glVertex3d(s2 * math.cos(angle + delta), s2 * math.sin(angle + delta), +z)
-                glVertex3d(s2 * math.cos(angle + delta), s2 * math.sin(angle + delta), -z)
+        self.qglColor(QtGui.QColor.fromCmykF(0.0, 0.0, 0.0, 1.0)) #back
+        GL.glVertex3d(x1, y1, z1)
+        GL.glVertex3d(x2, y2, z1)
+        GL.glVertex3d(x3, y3, z1)
+        GL.glVertex3d(x4, y4, z1)
 
-        glVertex3d(r1, 0.0, +z)
-        glVertex3d(r1, 0.0, -z)
-        glEnd()
+        GL.glVertex3d(x4, y4, z2)
+        GL.glVertex3d(x3, y3, z2)
+        GL.glVertex3d(x2, y2, z2)
+        GL.glVertex3d(x1, y1, z2)
 
-        glShadeModel(GL_SMOOTH)
+        GL.glVertex3d(x1, y1, z2)
+        GL.glVertex3d(x2, y2, z2)
+        GL.glVertex3d(x2, y2, z1)
+        GL.glVertex3d(x1, y1, z1)
 
-        glBegin(GL_QUAD_STRIP)
+        GL.glVertex3d(x1, y1, z2)
+        GL.glVertex3d(x1, y1, z1)
+        GL.glVertex3d(x4, y4, z1)
+        GL.glVertex3d(x4, y4, z2)
 
-        for i in range(toothCount+1):
-            angle = i * 2.0 * math.pi / toothCount
-            glNormal3d(-math.cos(angle), -math.sin(angle), 0.0)
-            glVertex3d(r0 * math.cos(angle), r0 * math.sin(angle), +z)
-            glVertex3d(r0 * math.cos(angle), r0 * math.sin(angle), -z)
+        GL.glVertex3d(x2, y2, z2)
+        GL.glVertex3d(x3, y3, z2)
+        GL.glVertex3d(x3, y3, z1)
+        GL.glVertex3d(x2, y2, z1)
 
-        glEnd()
+        GL.glVertex3d(x3, y3, z2)
+        GL.glVertex3d(x4, y4, z2)
+        GL.glVertex3d(x4, y4, z1)
+        GL.glVertex3d(x3, y3, z1)
+    # def makeObject(self):
+    #     genList = GL.glGenLists(1)
+    #     GL.glNewList(genList, GL.GL_COMPILE)
 
-        glEndList()
+    #     GL.glBegin(GL.GL_QUADS)
 
-        return list    
+    #     x1 = +0.06
+    #     y1 = -0.14
+    #     x2 = +0.14
+    #     y2 = -0.06
+    #     x3 = +0.08
+    #     y3 = +0.00
+    #     x4 = +0.30
+    #     y4 = +0.22
 
-    def drawGear(self, gear, dx, dy, dz, angle):
-        glPushMatrix()
-        glTranslated(dx, dy, dz)
-        glRotated(angle, 0.0, 0.0, 1.0)
-        glCallList(gear)
-        glPopMatrix()
+    #     self.quad(x1, y1, x2, y2, y2, x2, y1, x1)
+    #     self.quad(x3, y3, x4, y4, y4, x4, y3, x3)
 
-    def normalizeAngle(self, angle):
-        while (angle < 0):
-            angle += 360 * 16
+    #     self.extrude(x1, y1, x2, y2)
+    #     self.extrude(x2, y2, y2, x2)
+    #     self.extrude(y2, x2, y1, x1)
+    #     self.extrude(y1, x1, x1, y1)
+    #     self.extrude(x3, y3, x4, y4)
+    #     self.extrude(x4, y4, y4, x4)
+    #     self.extrude(y4, x4, y3, x3)
 
-        while (angle > 360 * 16):
-            angle -= 360 * 16
+    #     NumSectors = 200
+
+    #     for i in range(NumSectors):
+    #         angle1 = (i * 2 * math.pi) / NumSectors
+    #         x5 = 0.30 * math.sin(angle1)
+    #         y5 = 0.30 * math.cos(angle1)
+    #         x6 = 0.20 * math.sin(angle1)
+    #         y6 = 0.20 * math.cos(angle1)
+
+    #         angle2 = ((i + 1) * 2 * math.pi) / NumSectors
+    #         x7 = 0.20 * math.sin(angle2)
+    #         y7 = 0.20 * math.cos(angle2)
+    #         x8 = 0.30 * math.sin(angle2)
+    #         y8 = 0.30 * math.cos(angle2)
+
+    #         self.quad(x5, y5, x6, y6, x7, y7, x8, y8)
+
+    #         self.extrude(x6, y6, x7, y7)
+    #         self.extrude(x8, y8, x5, y5)
+
+    #     GL.glEnd()
+    #     GL.glEndList()
+
+    #     return genList
+
+    # def quad(self, x1, y1, x2, y2, x3, y3, x4, y4):
+    #     self.qglColor(self.trolltechGreen)
+
+    #     GL.glVertex3d(x1, y1, -0.05)
+    #     GL.glVertex3d(x2, y2, -0.05)
+    #     GL.glVertex3d(x3, y3, -0.05)
+    #     GL.glVertex3d(x4, y4, -0.05)
+
+    #     GL.glVertex3d(x4, y4, +0.05)
+    #     GL.glVertex3d(x3, y3, +0.05)
+    #     GL.glVertex3d(x2, y2, +0.05)
+    #     GL.glVertex3d(x1, y1, +0.05)
+
+    # def extrude(self, x1, y1, x2, y2):
+    #     self.qglColor(self.trolltechGreen.dark(250 + int(100 * x1)))
+
+    #     GL.glVertex3d(x1, y1, +0.05)
+    #     GL.glVertex3d(x2, y2, +0.05)
+    #     GL.glVertex3d(x2, y2, -0.05)
+    #     GL.glVertex3d(x1, y1, -0.05)

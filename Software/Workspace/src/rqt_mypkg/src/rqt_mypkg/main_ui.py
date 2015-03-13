@@ -131,7 +131,7 @@ class MainWindow(QMainWindow):
 
     def _handle_pb_imu_clicked(self):
         self.imuWidget._dialog.show()
-        rospy.Subscriber("/imu/data", Imu, self.imuWidget.updateImu)
+        # rospy.Subscriber("/imu/data", Imu, self.imuWidget.updateImu)
         
     def _handle_pb_cam_start_clicked(self):
         self.camWidget.startCamera()
