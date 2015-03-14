@@ -20,8 +20,7 @@
 
 NodeHandler nodeHandler(20, 2000);
 ServoNode claw(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
-ServoNode cameraYaw(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
-ServoNode cameraPitch(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
+CameraNode cameraNode(PULSE_WIDTH_MIN, PULSE_WIDTH_MAX, PULSE_WIDTH_MIN, PULSE_WIDTH_MAX);
 AutoShutDown autoShutDown(RELAY_PIN);
 HomeNode homeNode(HOME_FRONT_LEFT, HOME_FRONT_RIGHT, HOME_BACK_LEFT, HOME_BACK_RIGHT);
 
@@ -38,8 +37,7 @@ void setup()
     claw.claw.attach(CLAW_PIN, claw.pulse_width_min, claw.pulse_width_max);
     nodeHandler.addSubscriber(&claw);
     nodeHandler.addSubscriber(&autoShutDown);
-    nodeHandler.addSubscriber(&cameraYaw);
-    nodeHandler.addSubscriber(&cameraPitch);
+    nodeHandler.addSubscriber(&cameraNode);
 
     nodeHandler.addPublisher(&homeNode);
 }

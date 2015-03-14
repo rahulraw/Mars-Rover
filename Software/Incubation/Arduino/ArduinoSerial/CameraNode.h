@@ -18,6 +18,8 @@ class CameraNode : public Subscriber
         ServoNode * servoYaw;
         ServoNode * servoPitch;
 
+        int zoom;
+
         virtual void run(char * data);
 };
 
