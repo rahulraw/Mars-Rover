@@ -18,6 +18,9 @@ class ServoNode : public Subscriber
         ServoNode(int pulse_width_min, int pulse_width_max);
 
         virtual void run(char * data);
+
+        void writeMicroseconds(int writeMicroseconds);
+
     private:
         void init(int pulse_width_min, int pulse_width_max);
         int getPulse(int angle);

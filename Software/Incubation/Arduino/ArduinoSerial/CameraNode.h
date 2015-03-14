@@ -15,10 +15,8 @@ class CameraNode : public Subscriber
         ~CameraNode();
         CameraNode(int pulse_width_min1, int pulse_width_max1, int pulse_width_min2, int pulse_width_max2);
 
-        ServoNode * servoYaw;
+        ServoNode * servoRotate;
         ServoNode * servoPitch;
-
-        int zoom;
 
         virtual void run(char * data);
 };
