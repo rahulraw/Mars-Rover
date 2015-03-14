@@ -32,10 +32,11 @@ class MainWindow(QMainWindow):
         centralWidget = QtGui.QWidget()
         self.setCentralWidget(centralWidget)
 
-        self.imuWidget = imu_dialog()
-        self.glWidget = GLWidget()
         self.orientWidget = OrientWidget()
+        self.imuWidget = imu_dialog()
         self.camWidget = cameraWidget()
+
+        self.glWidget = GLWidget(self.orientWidget)
 
         self.controlArea = QtGui.QScrollArea()
         self.controlLayout = QtGui.QVBoxLayout()
@@ -43,6 +44,7 @@ class MainWindow(QMainWindow):
         self.controlLayout.addWidget(self.pb_imu)
         self.controlLayout.addWidget(self.pb_cam_start)
         self.controlLayout.addWidget(self.pb_calibrateImu)
+        self.controlLayout.addWidget(self.pb_kill_imu)
         self.controlArea.setLayout(self.controlLayout)
         self.controlArea.setFixedSize(200,600)
 
@@ -82,7 +84,11 @@ class MainWindow(QMainWindow):
         self.pb_calibrateImu = QtGui.QPushButton('Calibrate IMU')
         self.pb_calibrateImu.clicked[bool].connect(self._handle_pb_calibrateImu_clicked)
 
+        self.pb_kill_imu = QtGui.QPushButton('Kill IMU')
+        self.pb_kill_imu.clicked[bool].connect(self._handle_pb_killImu_clicked)
+
     def _handle_pb_imu_clicked(self):
+        self.imuWidget.startImu()
         self.imuWidget._dialog.show()
 
     def _handle_pb_cam_start_clicked(self):
@@ -90,3 +96,6 @@ class MainWindow(QMainWindow):
 
     def _handle_pb_calibrateImu_clicked(self):
         self.glWidget.calibrateImu()
+
+    def _handle_pb_killImu_clicked(self):
+        self.imuWidget.exitImu()

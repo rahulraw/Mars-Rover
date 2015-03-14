@@ -6,6 +6,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from OpenGL import GL
 from sensor_msgs.msg import Imu
+from rover2d import OrientWidget
 try:
     from PyQt4.QtCore import QString
 except ImportError:
@@ -36,8 +37,11 @@ class Window(QtGui.QWidget):
 
 class GLWidget(QtOpenGL.QGLWidget):
 
-    def __init__(self, parent = None):
+    def __init__(self, rover2dWidget = None, parent = None):
         super(GLWidget, self).__init__(parent)
+
+        self.r2d_widget = OrientWidget(rover2dWidget)
+
         self.object = 0
         self.xRot = 0
         self.yRot = 0
@@ -96,15 +100,21 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.roll = euler[0] * 180 / math.pi + 180 + self.roll_offset
         self.pitch = euler[1] * 180 / math.pi + 180 + self.pitch_offset
         self.yaw = euler[2] * 180 / math.pi + 180 + self.yaw_offset
+
         if not math.isnan(self.roll) and not math.isnan(self.prev_roll):
             if int(math.floor(self.roll)) != int(math.floor(self.prev_roll)):
                 self.setXRotation(self.roll * 16)
+                self.r2d_widget.setIncline(self.roll)
+                self.r2d_widget.update()
+
         if not math.isnan(self.pitch) and not math.isnan(self.prev_pitch):
             if int(math.floor(self.pitch)) != int(math.floor(self.prev_pitch)):
-                self.setYRotation(self.pitch * 16)
+                self.setZRotation(-self.pitch * 16)
+
         if not math.isnan(self.yaw) and not math.isnan(self.prev_yaw):
             if int(math.floor(self.yaw)) != int(math.floor(self.prev_yaw)):
-                self.setZRotation(self.yaw * 16)
+                self.setYRotation(self.yaw * 16)
+
 
     def minimumSizeHint(self):
         return QtCore.QSize(50, 50)
