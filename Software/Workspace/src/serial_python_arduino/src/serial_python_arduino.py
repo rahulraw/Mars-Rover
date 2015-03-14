@@ -81,7 +81,7 @@ class Arduino:
             self.message_length += 1
             self.messages.append(chr(3))
             self.messages.append(chr(self.camera_mount_info.x_pos))
-            self.messages.append(chr(self.camera_mount_info.y_pos))
+            self.messages.append(chr(self.camera_mount_info.y_pos) / 2)
             self.messages.append(chr(self.camera_mount_info.zoom))
             self.send_camera_mount_info = False
 
