@@ -14,7 +14,7 @@ class Arduino:
 
         rospy.init_node('serial_bridge', anonymous=True)
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM0', 9600)
+        self.ser = serial.Serial('/dev/ttyACM1', 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
         self.send_camera_mount_info = False
@@ -44,9 +44,9 @@ class Arduino:
         while not rospy.is_shutdown():
             msg = self._read_byte()
             if (msg == self.ACCEPT_SERIAL):
-                self.claw()
-                self.auto_shut_down()
-                self.camera_mount_info()
+                #self.claw()
+                #self.auto_shut_down()
+                self.camera_mount_control()
                 self.send()
             elif (msg == self.SEND_SERIAL):
                 topic = self._read_byte()
@@ -63,13 +63,14 @@ class Arduino:
             self.messages.append(chr(1))
             self.messages.append(chr((self.controller.left_joy_x + 90) / 2))
 
-    def camera_mount_info(self):
+    def camera_mount_control(self):
         if self.send_camera_mount_info:
             self.message_length += 1
-            self.messages.append(chr(2))
+            self.messages.append(chr(3))
             self.messages.append(chr(self.camera_mount_info.x_pos))
             self.messages.append(chr(self.camera_mount_info.y_pos))
             self.messages.append(chr(self.camera_mount_info.zoom))
+            self.send_camera_mount_info = False
 
     def auto_shut_down(self):
         if self.send_shut_down:
