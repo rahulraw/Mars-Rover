@@ -14,9 +14,10 @@ class Arduino:
 
         rospy.init_node('serial_bridge', anonymous=True)
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM1', 9600)
+        self.ser = serial.Serial('/dev/ttyACM0', 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
+        self.send_manipulator = False
         self.send_camera_mount_info = False
         self.camera_mount_info = CameraMountInfo()
         self.shut_down = False
@@ -25,12 +26,13 @@ class Arduino:
         self.messages = []
         self.publish_nodes = [self.homing]
 
-    def callback_claw(self, controller):
+    def callback_manipulator(self, controller):
         if controller.killswitch != self.controller.killswitch:
             shut_down = Bool()
             shut_down.data = self.controller.killswitch == 1
             self.callback_auto_shut_down(shut_down)
         self.controller = controller
+        self.send_manipulator = True
 
     def callback_auto_shut_down(self, shut_down):
         self.send_shut_down = self.shut_down != shut_down.data
@@ -43,9 +45,10 @@ class Arduino:
     def start(self):
         while not rospy.is_shutdown():
             msg = self._read_byte()
+
             if (msg == self.ACCEPT_SERIAL):
-                #self.claw()
-                #self.auto_shut_down()
+                self.manipulator()
+                self.auto_shut_down()
                 self.camera_mount_control()
                 self.send()
             elif (msg == self.SEND_SERIAL):
@@ -57,11 +60,21 @@ class Arduino:
                 print(msg)
                 # Data needs to be passed into our other message
 
-    def claw(self):
-        if self.controller.left_trigger == 0:
+    def manipulator(self):
+        if self.send_manipulator and self.controller.left_trigger == 0:
             self.message_length += 1
             self.messages.append(chr(1))
             self.messages.append(chr((self.controller.left_joy_x + 90) / 2))
+            self.messages.append(chr((self.controller.right_joy_y + 90) / 2))
+            self.messages.append(chr((self.controller.right_joy_x + 90) / 2))
+            self.send_manipulator = False
+
+    def auto_shut_down(self):
+        if self.send_shut_down:
+            self.message_length += 1
+            self.messages.append(chr(2))
+            self.messages.append(chr(1 if self.shut_down else 0))
+            self.send_shut_down = False
 
     def camera_mount_control(self):
         if self.send_camera_mount_info:
@@ -71,13 +84,6 @@ class Arduino:
             self.messages.append(chr(self.camera_mount_info.y_pos))
             self.messages.append(chr(self.camera_mount_info.zoom))
             self.send_camera_mount_info = False
-
-    def auto_shut_down(self):
-        if self.send_shut_down:
-            self.message_length += 1
-            self.messages.append(chr(2))
-            self.messages.append(chr(1 if self.shut_down else 0))
-            self.send_shut_down = False
 
     def homing(self, data):
         homing_info = HomingInfo()
@@ -95,7 +101,7 @@ class Arduino:
         self.messages = []
 
     def setup_topics(self):
-        rospy.Subscriber("RCValues", Controller, self.callback_claw, queue_size=1)
+        rospy.Subscriber("RCValues", Controller, self.callback_manipulator, queue_size=1)
         rospy.Subscriber("shutoff", Bool, self.callback_auto_shut_down, queue_size=1)
         rospy.Subscriber("CameraMountInfo", CameraMountInfo, self.callback_camera_mount_info, queue_size=10)
         self.homing_pub = rospy.Publisher("homing_info", HomingInfo, queue_size=1)

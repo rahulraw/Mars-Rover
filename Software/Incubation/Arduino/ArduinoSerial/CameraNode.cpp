@@ -10,9 +10,11 @@ CameraNode::CameraNode(int pulse_width_min1, int pulse_width_max1, int pulse_wid
 
 void CameraNode::run(char * data)
 {
-    this->servoYaw->run(&data[0]);
-    this->servoPitch->run(&data[1]);
-    this->zoom = data[0];
+    //this->servoYaw->run(&data[0]);
+    // //this->servoPitch->run(&data[1]);
+    // Serial.write(data[0]);
+    // Serial.write(data[1]);
+    // //his->zoom = data[0];
 }
 
 CameraNode::~CameraNode() {
