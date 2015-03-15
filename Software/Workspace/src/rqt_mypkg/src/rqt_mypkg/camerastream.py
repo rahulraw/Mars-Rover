@@ -57,13 +57,18 @@ class cameraWidget(QtGui.QWidget):
         self.webcam = Webcam(Config.scale)
         self.topic = rospy.get_param('~topic', 'video_stream')
         self.node = rospy.get_param('~node', 'receiver')
+        self.isPublished = False
+
         if Config.gray:
             self.bridge = BWBridge()
         else:
             self.bridge = RGBBridge()
 
+        self.cam_ymin = 140
+        self.cam_ymax = 170
+
         self.cam_xpos = 1
-        self.cam_ypos = 110
+        self.cam_ypos = (self.cam_ymin + self.cam_ymax)/2
         self.cam_zpos = 1
         
         self.controlLayout = QtGui.QGridLayout()
@@ -109,7 +114,9 @@ class cameraWidget(QtGui.QWidget):
             self._handle_pb_zoom_in_event()
         elif e.key() == QtCore.Qt.Key_X:
             self._handle_pb_zoom_out_event()
-        self.publishInfo()
+        if (not self.isPublished):
+            self.publishInfo()
+            self.isPublished = True
 
     def keyReleaseEvent(self, e):
         if e.key() == QtCore.Qt.Key_J or e.key() == QtCore.Qt.Key_L:
@@ -120,7 +127,9 @@ class cameraWidget(QtGui.QWidget):
             self.cam_zpos = 1
             self.displayzoomText()
             self.scrollbar_cam_zoom.setValue(self.cam_zpos)
-        self.publishInfo()
+        if (self.isPublished):
+            self.publishInfo()
+            self.isPublished = False
 
     def startCamera(self):
         # self.camera.start()
@@ -158,25 +167,35 @@ class cameraWidget(QtGui.QWidget):
         self.tb_cam_ypos.setText(QString(self.cam_ypos))
         self.displayzoomText()
 
+        self.tb_ymin = QtGui.QLineEdit()
+        self.tb_ymax = QtGui.QLineEdit()
+        self.tb_ymin.connect(self.tb_ymin, QtCore.SIGNAL('textChanged(QString)'), self._tb_ymin_changed)
+        self.tb_ymax.connect(self.tb_ymax, QtCore.SIGNAL('textChanged(QString)'), self._tb_ymax_changed)
+        self.tb_ymin.setText(QString(self.cam_ymin))
+        self.tb_ymax.setText(QString(self.cam_ymax))
+
     def createScrollbars(self):
         self.scrollbar_x_pos = QtGui.QScrollBar()
         self.scrollbar_x_pos.setOrientation(QtCore.Qt.Horizontal)
         self.scrollbar_x_pos.setMinimum(0)
         self.scrollbar_x_pos.setMaximum(2)
-        self.scrollbar_x_pos.connect(self.scrollbar_x_pos, QtCore.SIGNAL('sliderMoved(int)'), self._cam_slider_x_moved)
+        self.scrollbar_x_pos.setDisabled(True)
+        # self.scrollbar_x_pos.connect(self.scrollbar_x_pos, QtCore.SIGNAL('sliderMoved(int)'), self._cam_slider_x_moved)
         self.scrollbar_y_pos = QtGui.QScrollBar()
         self.scrollbar_y_pos.setOrientation(QtCore.Qt.Vertical)
-        self.scrollbar_y_pos.setMinimum(110-40)
-        self.scrollbar_y_pos.setMaximum(110+40)
-        self.scrollbar_y_pos.connect(self.scrollbar_y_pos, QtCore.SIGNAL('sliderMoved(int)'), self._cam_slider_y_moved)
+        self.scrollbar_y_pos.setMinimum(self.cam_ymin)
+        self.scrollbar_y_pos.setMaximum(self.cam_ymax)
+        self.scrollbar_y_pos.setDisabled(True)
+        # self.scrollbar_y_pos.connect(self.scrollbar_y_pos, QtCore.SIGNAL('sliderMoved(int)'), self._cam_slider_y_moved)
         self.scrollbar_cam_zoom = QtGui.QScrollBar()
         self.scrollbar_cam_zoom.setOrientation(QtCore.Qt.Horizontal)
         self.scrollbar_cam_zoom.setMinimum(0)
         self.scrollbar_cam_zoom.setMaximum(2)
-        self.scrollbar_cam_zoom.connect(self.scrollbar_cam_zoom, QtCore.SIGNAL('sliderMoved(int)'), self._cam_slider_zoom_moved)
+        self.scrollbar_cam_zoom.setDisabled(True)
+        # self.scrollbar_cam_zoom.connect(self.scrollbar_cam_zoom, QtCore.SIGNAL('sliderMoved(int)'), self._cam_slider_zoom_moved)
 
         self.scrollbar_x_pos.setValue(self.cam_xpos)
-        self.scrollbar_y_pos.setValue(70 + (150-self.cam_ypos))
+        self.scrollbar_y_pos.setValue(self.cam_ymin + (self.cam_ymax-self.cam_ypos))
         self.scrollbar_cam_zoom.setValue(self.cam_zpos)
 
     def createButtons(self):
@@ -193,13 +212,16 @@ class cameraWidget(QtGui.QWidget):
         self.controlLayout.addWidget(self.tb_cam_ypos, 4, 3, 1, 1)
         self.controlLayout.addWidget(self.tb_cam_zpos, 4, 1, 1, 2)
 
+        self.controlLayout.addWidget(self.tb_ymin,5,0,1,2)
+        self.controlLayout.addWidget(self.tb_ymax,5,2,1,2)
+
     def _cam_slider_x_moved(self, value):
         self.cam_xpos = value
         self.displayxposText()
         self.publishInfo()
 
     def _cam_slider_y_moved(self, value):
-        self.cam_ypos = 70 + (150-value)
+        self.cam_ypos = self.cam_ymin + (self.cam_ymax-value)
         self.tb_cam_ypos.setText(QString(self.cam_ypos))
         self.publishInfo()
 
@@ -235,20 +257,20 @@ class cameraWidget(QtGui.QWidget):
             self.tb_cam_zpos.setText("Zooming out")
 
     def _handle_pb_cam_up_event(self):
-        if (self.cam_ypos < 150):
+        if (self.cam_ypos < self.cam_ymax):
             self.cam_ypos += 1
         else:
-            self.cam_ypos = 150
+            self.cam_ypos = self.cam_ymax
         self.tb_cam_ypos.setText(QString(self.cam_ypos))
-        self.scrollbar_y_pos.setValue(70 + (150-self.cam_ypos))
+        self.scrollbar_y_pos.setValue(self.cam_ymin + (self.cam_ymax-self.cam_ypos))
 
     def _handle_pb_cam_down_event(self):
-        if (self.cam_ypos > 70):
+        if (self.cam_ypos > self.cam_ymin):
             self.cam_ypos -= 1
         else:
-            self.cam_ypos = 70
+            self.cam_ypos = self.cam_ymin
         self.tb_cam_ypos.setText(QString(self.cam_ypos))
-        self.scrollbar_y_pos.setValue(70 + (150-self.cam_ypos))
+        self.scrollbar_y_pos.setValue(self.cam_ymin + (self.cam_ymax-self.cam_ypos))
 
     def _handle_pb_zoom_in_event(self):
         self.cam_zpos = 0
@@ -260,6 +282,17 @@ class cameraWidget(QtGui.QWidget):
         self.scrollbar_cam_zoom.setValue(self.cam_zpos)
         self.displayzoomText()
 
+    def _tb_ymin_changed(self, value):
+        self.cam_ymin = int(value)
+        self.scrollbar_cam_zoom.setMinimum(self.cam_ymin)
+        self.scrollbar_cam_zoom.setMaximum(self.cam_ymax)
+        self.update()
+
+    def _tb_ymax_changed(self, value):
+        self.cam_ymax = int(value)
+        self.scrollbar_cam_zoom.setMaximum(self.cam_ymax)
+        self.scrollbar_cam_zoom.setMinimum(self.cam_ymin)
+        self.update()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
