@@ -8,9 +8,12 @@
 #include "CameraNode.h"
 #include "Manipulator.h"
 
-#define SERVO_CLAW_PIN      10
-#define SERVO_SWING_PIN     11
-#define SERVO_ROTATE_PIN    12
+#define SERVO_MANIPULATOR_CLAW      10
+#define SERVO_MANIPULATOR_SWING     11
+#define SERVO_MANIPULATOR_ROTATE    12
+
+#define SERVO_CAM_ROTATE    2
+#define SERVO_CAM_PITCH     3
 
 #define PULSE_WIDTH_MAX_CLAW 1400
 #define PULSE_WIDTH_MIN_CLAW 900
@@ -42,9 +45,12 @@ void setup()
     pinMode(HOME_BACK_LEFT, INPUT_PULLUP);
     pinMode(HOME_FRONT_LEFT, INPUT_PULLUP);
 
-    manipulator.servoSwing->servo.attach(SERVO_ROTATE_PIN, manipulator.servoSwing->pulse_width_min, manipulator.servoSwing->pulse_width_max);
-    manipulator.servoRotate->servo.attach(SERVO_SWING_PIN, manipulator.servoRotate->pulse_width_min, manipulator.servoRotate->pulse_width_max);
-    manipulator.servoClaw->servo.attach(SERVO_CLAW_PIN,  manipulator.servoClaw->pulse_width_min,  manipulator.servoClaw->pulse_width_max);
+    manipulator.servoSwing->servo.attach(SERVO_MANIPULATOR_ROTATE, manipulator.servoSwing->pulse_width_min, manipulator.servoSwing->pulse_width_max);
+    manipulator.servoRotate->servo.attach(SERVO_MANIPULATOR_SWING, manipulator.servoRotate->pulse_width_min, manipulator.servoRotate->pulse_width_max);
+    manipulator.servoClaw->servo.attach(SERVO_MANIPULATOR_CLAW,  manipulator.servoClaw->pulse_width_min,  manipulator.servoClaw->pulse_width_max);
+
+    cameraNode.servoRotate->servo.attach(SERVO_CAM_ROTATE, cameraNode.servoRotate->pulse_width_min, cameraNode.servoRotate->pulse_width_max);
+    cameraNode.servoPitch->servo.attach(SERVO_CAM_PITCH, cameraNode.servoPitch->pulse_width_min, cameraNode.servoPitch->pulse_width_max);
 
     nodeHandler.addSubscriber(&manipulator);
     nodeHandler.addSubscriber(&autoShutDown);
