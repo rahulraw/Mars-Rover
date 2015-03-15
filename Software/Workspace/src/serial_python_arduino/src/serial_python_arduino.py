@@ -39,6 +39,7 @@ class Arduino:
         self.shut_down = shut_down.data
 
     def callback_camera_mount_info(self, camera_mount_info):
+        print(camera_mount_info)
         self.camera_mount_info = camera_mount_info
         self.send_camera_mount_info = True
 
@@ -81,7 +82,7 @@ class Arduino:
             self.message_length += 1
             self.messages.append(chr(3))
             self.messages.append(chr(self.camera_mount_info.x_pos))
-            self.messages.append(chr(self.camera_mount_info.y_pos) / 2)
+            self.messages.append(chr(self.camera_mount_info.y_pos))
             self.messages.append(chr(self.camera_mount_info.zoom))
             self.send_camera_mount_info = False
 

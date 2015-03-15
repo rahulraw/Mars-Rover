@@ -14,7 +14,7 @@ class Camera:
     def __init__(self):
         self.topic = rospy.get_param('~topic', 'video_stream')
         self.node = rospy.get_param('~node', 'camera') 
-        self.camera_id = int(rospy.get_param('~camera_id', 0))
+        self.camera_id = int(rospy.get_param('~camera_id', 1))
         self.webcam = Webcam(Config.scale, self.camera_id)
         self.webcam.start_capture()
         if Config.gray:

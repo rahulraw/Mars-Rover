@@ -16,11 +16,7 @@ ServoNode::ServoNode(int pulse_width_min, int pulse_width_max)
 void ServoNode::run(char * data)
 {
     int pulse = this->getPulse((int) data[0]);
-    this->writeMicroseconds(pulse);
-}
-
-void ServoNode::writeMicroseconds(int val){
-    this->servo.writeMicroseconds(val);
+    this->servo.writeMicroseconds(pulse);
 }
 
 int ServoNode::getPulse(int angle)

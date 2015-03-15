@@ -1,16 +1,6 @@
 #include "CameraNode.h"
 #include "Arduino.h"
 
-#define CAM_ROTATE_STOP 1354
-#define CAM_ROTATE_CW   CAM_ROTATE_STOP + 30
-#define CAM_ROTATE_CCW  CAM_ROTATE_STOP - 30
-
-#define COMMAND_STOP    1
-#define COMMAND_LOW     0
-#define COMMAND_HIGH    2
-
-#define PIN_CAM_ZOOM    8
-
 CameraNode::CameraNode(int pulse_width_min1, int pulse_width_max1, int pulse_width_min2, int pulse_width_max2)
 {
     this->servoRotate = new ServoNode(pulse_width_min2, pulse_width_max1);
@@ -25,16 +15,23 @@ void CameraNode::run(char * data)
     char pitch = data[1];
     char zoom = data[2];
 
-    servoPitch->run(&pitch);
+    if (pitch < CAM_PITCH_LOW_LIMIT){
+        pitch = CAM_PITCH_LOW_LIMIT;
+    }
+    else if (pitch > CAM_PITCH_HIGH_LIMIT){
+        pitch = CAM_PITCH_HIGH_LIMIT;
+    }
+
+    servoPitch->servo.write(pitch);
 
     if (rotate == COMMAND_STOP){
-        servoPitch->writeMicroseconds(CAM_ROTATE_STOP);
+        servoRotate->servo.writeMicroseconds(CAM_ROTATE_STOP);
     }
     else if (rotate == COMMAND_LOW){
-        servoPitch->writeMicroseconds(CAM_ROTATE_CCW);
+        servoRotate->servo.writeMicroseconds(CAM_ROTATE_CCW);
     }
     else if (rotate == COMMAND_HIGH){
-        servoPitch->writeMicroseconds(CAM_ROTATE_CW);
+        servoRotate->servo.writeMicroseconds(CAM_ROTATE_CW);
     }
 
     if (zoom == COMMAND_STOP){

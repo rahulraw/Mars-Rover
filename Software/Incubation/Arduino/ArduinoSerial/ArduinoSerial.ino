@@ -49,8 +49,10 @@ void setup()
     manipulator.servoRotate->servo.attach(SERVO_MANIPULATOR_SWING, manipulator.servoRotate->pulse_width_min, manipulator.servoRotate->pulse_width_max);
     manipulator.servoClaw->servo.attach(SERVO_MANIPULATOR_CLAW,  manipulator.servoClaw->pulse_width_min,  manipulator.servoClaw->pulse_width_max);
 
-    cameraNode.servoRotate->servo.attach(SERVO_CAM_ROTATE, cameraNode.servoRotate->pulse_width_min, cameraNode.servoRotate->pulse_width_max);
-    cameraNode.servoPitch->servo.attach(SERVO_CAM_PITCH, cameraNode.servoPitch->pulse_width_min, cameraNode.servoPitch->pulse_width_max);
+    cameraNode.servoRotate->servo.attach(SERVO_CAM_ROTATE);
+    cameraNode.servoPitch->servo.attach(SERVO_CAM_PITCH);
+    cameraNode.servoRotate->servo.writeMicroseconds(CAM_ROTATE_STOP);
+    cameraNode.servoPitch->servo.write(CAM_PITCH_STRAIGHT);
 
     nodeHandler.addSubscriber(&manipulator);
     nodeHandler.addSubscriber(&autoShutDown);
