@@ -17,8 +17,14 @@ void setup(){
     srvCamRot.writeMicroseconds(CAM_ROTATE_STOP);
 
     // camRotateCCW();
+    Serial.begin(9600);
 
-    //srvCamPitch.attach(PIN_CAM_PITCH);
+    srvCamPitch.attach(PIN_CAM_PITCH);
+
+    char v = 140;
+
+    Serial.println((uint8_t) v);
+    //srvCamPitch.write((int) v);
     //camPitch(160);
 
     // pinMode(PIN_CAM_ZOOM, OUTPUT);

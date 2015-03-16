@@ -12,7 +12,7 @@ CameraNode::CameraNode(int pulse_width_min1, int pulse_width_max1, int pulse_wid
 void CameraNode::run(char * data)
 {
     char rotate = data[0];
-    char pitch = data[1];
+    uint8_t pitch = data[1];
     char zoom = data[2];
 
     if (pitch < CAM_PITCH_LOW_LIMIT){
@@ -47,7 +47,7 @@ void CameraNode::run(char * data)
     }
 
     Serial.write(data[0]);
-    Serial.write(data[1]);
+    Serial.write(pitch);
     Serial.write(data[2]);
 }
 

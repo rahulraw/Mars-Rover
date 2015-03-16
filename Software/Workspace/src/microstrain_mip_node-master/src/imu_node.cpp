@@ -116,7 +116,7 @@ public:
     
     private_node_handle_.param("autocalibrate", autocalibrate_, false);//true);
     private_node_handle_.param("assume_calibrated", calibrated_, false);
-    private_node_handle_.param("port", port, string("/dev/ttyACM0"));
+    private_node_handle_.param("port", port, string("/dev/ttyACM3"));
     private_node_handle_.param("max_drift_rate", max_drift_rate_, 0.000100);
 
 
