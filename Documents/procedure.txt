@@ -1,0 +1,67 @@
+0)	Set up computer to work with router
+	
+	Go to router settings, edit connection, and make sure that the ipv4 settings
+	are set to manual.
+
+	IP : 192.168.1.20
+	Gateway : 192.168.1.21
+	Netmask : 255.255.255.0
+
+/** ON ROVER **/
+
+1)      export ROS_MASTER_URI=http://<robot-host>:11311
+
+#
+# This lets your nodes know where the rosmaster lives. Roscore runs on port 11311
+# <robot-host> is going to be marsrover-Aspire-3830TG if the master is going to be on the
+# marsrover (which it is).
+#
+
+2)      make sure that your /etc/hosts file is accurate.
+
+#
+#       add line that says 
+#		192.168.1.20       <base-host>
+#	in Chun Shang Li's computer, it would be ChunshangLi-TP-Ubuntu
+#
+
+3) 	test connection - make sure that ping works.
+		ping 192.168.1.20
+		ping ChungshangLi-TP-Ubuntu
+
+/** ON BASE **/
+
+4)      make sure that your base station /etc/hosts file is accurate.
+
+#
+#       add line that says 
+#		192.168.1.20       <base-host>
+#	in Chun Shang Li's computer, it would be ChunshangLi-TP-Ubuntu
+#
+
+5) 	test connection - make sure that ping works.
+		ping 192.168.1.10
+		ping marsrover-Aspire-3830TG
+
+
+6)	ssh marsrover@marsrover-Aspire-3830TG
+		ontomars
+
+/** ON ROVER SSH CONNECTION **/
+
+7)	start tmux. This will allow you to run multiple procceses with one SSH session.
+
+8)	roscore
+
+9)	check to see if node is communicating properly by running controller with RCValues 
+	as the topic on your local machine while rostopic echoing the topic
+
+10)	If this works, then this will be good.
+
+11)	Otherwise, make sure your etc hosts is good, and your bashrc is good
+
+12)	ser arduino file thing.py
+
+13)	spam ps4 button until the relay activates.
+
+14)	motor_controller.py

@@ -3,7 +3,7 @@
 
 //do a half half voltage divider w/ green=GND, red=+5 yellow=FB
 #define PIN_CAM_ROTATE  2//backward/forward controlled PWM
-#define CAM_ROTATE_STOP 1354
+#define CAM_ROTATE_STOP 1360
 #define CAM_ROTATE_CW   CAM_ROTATE_STOP + 50
 #define CAM_ROTATE_CCW  CAM_ROTATE_STOP - 50
 
@@ -16,29 +16,35 @@ void setup(){
     srvCamRot.attach(PIN_CAM_ROTATE);
     srvCamRot.writeMicroseconds(CAM_ROTATE_STOP);
 
-    camRotateCCW();
+    // camRotateCCW();
+    Serial.begin(9600);
 
     srvCamPitch.attach(PIN_CAM_PITCH);
-    camPitch(125);
 
-    pinMode(PIN_CAM_ZOOM, OUTPUT);
-    digitalWrite(PIN_CAM_ZOOM, LOW);
-    delay(1000);
-    pinMode(PIN_CAM_ZOOM, INPUT);
-    delay(1000);
+    char v = 140;
 
-    pinMode(PIN_CAM_ZOOM, OUTPUT);
-    analogWrite(PIN_CAM_ZOOM, 255);
-    delay(1000);
+    Serial.println((uint8_t) v);
+    //srvCamPitch.write((int) v);
+    //camPitch(160);
+
+    // pinMode(PIN_CAM_ZOOM, OUTPUT);
+    // digitalWrite(PIN_CAM_ZOOM, LOW);
+    // delay(1000);
+    // pinMode(PIN_CAM_ZOOM, INPUT);
+    // delay(1000);
+
+    // pinMode(PIN_CAM_ZOOM, OUTPUT);
+    // analogWrite(PIN_CAM_ZOOM, 255);
+    // delay(1000);
 }
 
 void loop(){
-    // camRotateCCW();
-    camPitch(120);
-    delay(1000);
-    // camRotateCW();
-    camPitch(130);
-    delay(1000);
+    // // camRotateCCW();
+    // camPitch(120);
+    // delay(1000);
+    // // camRotateCW();
+    // camPitch(130);
+    // delay(1000);
 
     // pinMode(PIN_CAM_ZOOM, OUTPUT);
     // digitalWrite(PIN_CAM_ZOOM, LOW);
