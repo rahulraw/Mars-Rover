@@ -13,6 +13,6 @@
     
     <node name="rqt_mypkg" pkg="srqt_mypkg" type="RoverUI_main.py"/>
     
-    <node name="rqt_mypkg" pkg="srqt_mypkg" type="camera.py"/>
+    <node name="camera" pkg="rqt_mypkg" type="camera.py"/>
 
 </launch>
