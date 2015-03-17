@@ -1,6 +1,18 @@
 <launch>
 
-<node name="joystick" pkg="Workspace" type="/joystick_packages/scripts/joystick_package.py"
-<node name="joystick_echo" pkg="rostopic" type="rostopic" output="screen" args="echo RC_Values">
+    <node name="joystick" pkg="joystick_packages" type="controller.py"/>
+    <node name="joystick_echo" pkg="rostopic" type="rostopic" output="screen" args="echo RC_Values" launch-prefix="xterm -e"/>
+
+    <node name="serial_node" pkg="rosserial_python" type="serial_node.py">
+        <param name="port" value="/dev/ttyACM0"/>
+    </node>
+
+    <node name="serial_bridge" pkg="serial_python_arduino" type="serial_python_arduino.py"/>
+
+    <node name="RoboClaw" pkg="steering" type="motor_controller.py"/>
+    
+    <node name="rqt_mypkg" pkg="srqt_mypkg" type="RoverUI_main.py"/>
+    
+    <node name="rqt_mypkg" pkg="srqt_mypkg" type="camera.py"/>
 
 </launch>
