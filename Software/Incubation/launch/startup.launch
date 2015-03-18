@@ -11,7 +11,7 @@
 
     <node name="RoboClaw" pkg="steering" type="motor_controller.py"/>
     
-    <node name="rqt_mypkg" pkg="srqt_mypkg" type="RoverUI_main.py"/>
+    <node name="rqt_mypkg" pkg="rqt_mypkg" type="RoverUI_main.py"/>
     
     <node name="camera" pkg="rqt_mypkg" type="camera.py"/>
 
