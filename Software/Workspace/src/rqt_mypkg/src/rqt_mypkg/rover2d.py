@@ -1,4 +1,3 @@
-#Embedded file name: /home/jerbotron/Documents/uwrobotics.uwmrt/Software/Workspace/src/rqt_mypkg/src/rqt_mypkg/rover2d.py
 import math, numpy
 import rospy
 import sys
@@ -53,7 +52,7 @@ class OrientWidget(QtGui.QWidget):
         centralLayout = QtGui.QFormLayout()
         self.setLayout(centralLayout)
 
-        self.setFixedSize(300, 300)
+        # self.setFixedSize(300, 300)
 
     def test(self):
         print("testing")

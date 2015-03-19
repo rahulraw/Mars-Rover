@@ -1,4 +1,3 @@
-#Embedded file name: /home/jerbotron/Documents/uwrobotics.uwmrt/Software/Workspace/src/rqt_mypkg/src/rqt_mypkg/rover3d.py
 import sys, math, numpy, tf
 import rospy, rospkg
 from PyQt4 import QtCore, QtGui, QtOpenGL
@@ -32,8 +31,6 @@ class Window(QtGui.QWidget):
         mainLayout = QtGui.QVBoxLayout()
         mainLayout.addWidget(self.glWidget)
         self.setLayout(mainLayout)
-        self.setWindowTitle('Hello GL')
-
 
 class GLWidget(QtOpenGL.QGLWidget):
 
@@ -64,7 +61,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.petercyan = QtGui.QColor.fromCmykF(1.0, 0.0, 0.0, 0.0)
         self.magenta = QtGui.QColor.fromCmykF(0.0, 1.0, 0.0, 0.0)
 
-        self.setFixedSize(300,300)
+        # self.setFixedSize(300,300)
         self.startImu()
 
     def startImu(self):

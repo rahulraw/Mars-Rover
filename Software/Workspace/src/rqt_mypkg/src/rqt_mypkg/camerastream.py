@@ -1,4 +1,3 @@
-#Embedded file name: /home/jerbotron/Documents/uwrobotics.uwmrt/Software/Workspace/src/rqt_mypkg/src/rqt_mypkg/camerastream.py
 import numpy as np
 import rospy
 import serial
@@ -50,7 +49,6 @@ class camThread(QtCore.QThread):
         self.emit(QtCore.SIGNAL('start(QImage)'), self.image)
 
 class cameraWidget(QtGui.QWidget):
-
     def __init__(self, parent = None):
         super(cameraWidget, self).__init__(parent)
         # self.camera = Camera()
@@ -74,19 +72,19 @@ class cameraWidget(QtGui.QWidget):
         self.controlLayout = QtGui.QGridLayout()
         self.camControlArea = QtGui.QScrollArea()
         self.camControlArea.setLayout(self.controlLayout)
-        self.camControlArea.setFixedSize(500, 200)
+        self.camControlArea.setMinimumSize(500, 100)
         self.createLabels()
         self.createScrollbars()
         self.createTextBoxes()
         self.createControls()
         self.cameraWindow = QtGui.QLabel(self)
         self.cameraWindow.setScaledContents(True)
-        self.cameraWindow.setFixedSize(500, 400)
+        self.cameraWindow.setMinimumSize(500, 500)
         self.cameraBox = QtGui.QVBoxLayout()
         self.cameraBox.addWidget(self.cameraWindow)
         self.cameraBox.addWidget(self.camControlArea)
         self.setLayout(self.cameraBox)
-        self.setFixedSize(500, 600)
+        # self.setFixedSize(500, 600)
 
         self.topic = 'CameraPositions'
         self.node = 'CameraMount'
@@ -205,15 +203,15 @@ class cameraWidget(QtGui.QWidget):
         self.controlLayout.addWidget(self.scrollbar_x_pos, 0, 0, 1, 4)
         self.controlLayout.addWidget(self.scrollbar_y_pos, 0, 4, 5, 1)
         self.controlLayout.addWidget(self.scrollbar_cam_zoom, 2, 0, 1, 4)
-        self.controlLayout.addWidget(self.label_cam_xpos, 3, 0, 1, 1)
-        self.controlLayout.addWidget(self.label_cam_ypos, 3, 3, 1, 1)
-        self.controlLayout.addWidget(self.label_cam_zoom, 3, 1, 1, 2)
-        self.controlLayout.addWidget(self.tb_cam_xpos, 4, 0, 1, 1)
-        self.controlLayout.addWidget(self.tb_cam_ypos, 4, 3, 1, 1)
-        self.controlLayout.addWidget(self.tb_cam_zpos, 4, 1, 1, 2)
+        # self.controlLayout.addWidget(self.label_cam_xpos, 3, 0, 1, 1)
+        # self.controlLayout.addWidget(self.label_cam_ypos, 3, 3, 1, 1)
+        # self.controlLayout.addWidget(self.label_cam_zoom, 3, 1, 1, 2)
+        self.controlLayout.addWidget(self.tb_cam_xpos, 3, 0, 1, 1)
+        self.controlLayout.addWidget(self.tb_cam_ypos, 3, 3, 1, 1)
+        self.controlLayout.addWidget(self.tb_cam_zpos, 3, 1, 1, 2)
 
-        self.controlLayout.addWidget(self.tb_ymin,5,0,1,2)
-        self.controlLayout.addWidget(self.tb_ymax,5,2,1,2)
+        # self.controlLayout.addWidget(self.tb_ymin, 4, 0, 1, 2)
+        # self.controlLayout.addWidget(self.tb_ymax, 4, 2, 1, 2)
 
     def _cam_slider_x_moved(self, value):
         self.cam_xpos = value
@@ -250,11 +248,11 @@ class cameraWidget(QtGui.QWidget):
 
     def displayzoomText(self):
         if (self.cam_zpos == 0):
-            self.tb_cam_zpos.setText("Zooming In")
+            self.tb_cam_zpos.setText("Zooming Out")
         elif (self.cam_zpos == 1):
             self.tb_cam_zpos.setText("Stopped")
         elif (self.cam_zpos == 2):
-            self.tb_cam_zpos.setText("Zooming out")
+            self.tb_cam_zpos.setText("Zooming In")
 
     def _handle_pb_cam_up_event(self):
         if (self.cam_ypos < self.cam_ymax):
@@ -284,14 +282,14 @@ class cameraWidget(QtGui.QWidget):
 
     def _tb_ymin_changed(self, value):
         self.cam_ymin = int(value)
-        self.scrollbar_cam_zoom.setMinimum(self.cam_ymin)
-        self.scrollbar_cam_zoom.setMaximum(self.cam_ymax)
+        self.scrollbar_y_pos.setMinimum(self.cam_ymin)
+        self.scrollbar_y_pos.setMaximum(self.cam_ymax)
         self.update()
 
     def _tb_ymax_changed(self, value):
         self.cam_ymax = int(value)
-        self.scrollbar_cam_zoom.setMaximum(self.cam_ymax)
-        self.scrollbar_cam_zoom.setMinimum(self.cam_ymin)
+        self.scrollbar_y_pos.setMaximum(self.cam_ymax)
+        self.scrollbar_y_pos.setMinimum(self.cam_ymin)
         self.update()
 
 if __name__ == '__main__':
