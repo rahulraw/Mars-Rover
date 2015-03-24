@@ -100,13 +100,6 @@ class Steering:
             self.velocity = [self.steering_calc.velocity_left, self.steering_calc.velocity_right, self.steering_calc.velocity_left, self.steering_calc.velocity_right]
             self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
 
-            rover_info = RoverInfo()
-            rover_info.front_left_angle = self.steering_calc.front_left_angle
-            rover_info.front_right_angle = self.steering_calc.front_right_angle
-            rover_info.back_left_angle = self.steering_calc.back_left_angle
-            rover_info.back_right_angle = self.steering_calc.back_right_angle
-            self.info_pub.publish(rover_info);
-
     def start(self):
         [controller.ResetEncoderCnts() for controller in self.controllers]
             
@@ -122,6 +115,7 @@ class Steering:
                             self.rate.sleep()
                         self.finish_homing()
                     else:
+                        self.info_pub.publish(self._get_info());
                         [self.run(controller, velocity) for controller, velocity in zip(self.controllers, self.velocity)]
                         [self.rotate(controller, angle * 70.368) for controller, angle in zip(self.controllers, self.angle)]
                 except Exception, e:
@@ -147,7 +141,7 @@ class Steering:
     def print_controller(self, name, controller, angle):
         try:
             print("# {0} #".format(name))
-            print("Encoder: {0}".format(self.__convert_True_to_Mod__(controller.readM1encoder()[0])))
+            print("Encoder: {0}".format(controller.getTicks()))
             print("Target: {0}".format(angle * 70.368))
             print("Main Battery: {0}".format(controller.readmainbattery()))
             print("Max Current. Motor 1: {0}".format(controller.max_current_motor_1))
@@ -187,7 +181,7 @@ class Steering:
 
     def rotate(self, controller, num_ticks):
         try:
-            error = num_ticks - self.__convert_True_to_Mod__(controller.readM1encoder()[0]) + controller.offset
+            error = num_ticks - controller.getTicks()
             motorValue = max(-20, min(20, int((error) * self.proportionalConstant)))
 
             if abs(error) <= self.errorThres or num_ticks > 180 * 70.368:
@@ -221,9 +215,9 @@ class Steering:
             self.beeper.set(True)
 
     def finish_homing(self):
-
         for controller in self.controllers:
-            controller.offset = self.__convert_True_to_Mod__(controller.readM1encoder()[0]) + (90 * 70.368) * controller.rotation_orientation
+            # The get ticks value can't factor previous offset so it must be cancelled
+            controller.offset = controller.getTicks(90 * controller.ticks_per_degree + controller.offset) * controller.rotation_orientation
 
     def __check_batteries(self):
         try:
@@ -234,9 +228,6 @@ class Steering:
             pass
 
         return True
-
-    def __convert_True_to_Mod__(self, ticks):
-        return ticks - 2**32 if ticks > 2**31 else ticks
 
     def roboclaw_set_param(self):
         #These values are experimentally determined
@@ -250,6 +241,7 @@ class Steering:
             #set the constants for speed control
             controller.SetM2pidq(P_CONST, I_CONST, D_CONST, QPPS)
 
+
     def map(self, value, leftMin, leftMax, rightMin, rightMax):
         # Figure out how 'wide' each range is
         leftSpan = leftMax - leftMin
@@ -260,6 +252,33 @@ class Steering:
 
         # Convert the 0-1 range into a value in the right range.
         return rightMin + (valueScaled * rightSpan)
+
+    def _get_info():
+        rover_info = RoverInfo()
+        # Information from the joystick
+        rover_info.front_left_angle = self.steering_calc.front_left_angle
+        rover_info.front_right_angle = self.steering_calc.front_right_angle
+        rover_info.back_left_angle = self.steering_calc.back_left_angle
+        rover_info.back_right_angle = self.steering_calc.back_right_angle
+
+        # Information from the encoders
+        rover_info.real_front_left_angle  = self.controllerFL.getAngle()
+        rover_info.real_front_right_angle = self.controllerFR.getAngle()
+        rover_info.real_back_left_angle   = self.controllerBL.getAngle()
+        rover_info.real_back_right_angle  = self.controllerBR.getAngle()
+
+        # Current information from the motor controller
+        rover_info.real_front_left_current  = max(self.controllerFL.readcurrents())
+        rover_info.real_front_right_current = max(self.controllerFR.readcurrents())
+        rover_info.real_back_left_current   = max(self.controllerBL.readcurrents())
+        rover_info.real_back_right_current  = max(self.controllerBR.readcurrents())
+
+        # Voltage information from the motor controller
+        rover_info.real_front_left_voltage  = self.controllerFL.readmainbattery()
+        rover_info.real_front_right_voltage = self.controllerFR.readmainbattery()
+        rover_info.real_back_left_voltage   = self.controllerBL.readmainbattery()
+        rover_info.real_back_right_voltage  = self.controllerBR.readmainbattery()
+        return rover_info
 
 if __name__ == '__main__':
     args = ["RCValues", "RoboClaw"]

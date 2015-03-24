@@ -28,8 +28,8 @@ class EndEffector:
     def roboclaw_connect(self):
         try:
             print("Connecting to Roboclaws...")
-            self.endAndStick = RoboClaw("/dev/roboclawfl")
-            # self.boom = RoboClaw("/dev/roboclawbl")
+            self.endAndStick = RoboClaw("/dev/ttyACM1")
+            self.boom = RoboClaw("/dev/ttyACM2")
             return True
         except:
             return False
@@ -46,7 +46,7 @@ class EndEffector:
                 try: 
                     self.run(self.endAndStick, self.joystick1.main_joy_x, 1)
                     self.run(self.endAndStick, self.joystick1.main_joy_y, 2)
-                    # self.run(self.boom, self.joystick2.main_joy_y, 1)
+                    self.run(self.boom, self.joystick2.main_joy_y, 2)
                 except:
                     pass
             else:
@@ -82,7 +82,7 @@ class EndEffector:
         try:
             self.endAndStick.M1Forward(0)
             self.endAndStick.M2Forward(0)
-            # self.boom.M1Forward(0)
+            self.boom.M1Forward(0)
         except:
             traceback.print_exc()
 

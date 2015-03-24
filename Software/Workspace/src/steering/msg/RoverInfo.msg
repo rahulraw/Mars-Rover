@@ -1,5 +1,17 @@
+int8 real_front_left_angle
+int8 real_front_right_angle
+int8 real_back_left_angle
+int8 real_back_right_angle
 int8 front_left_angle
 int8 front_right_angle
 int8 back_left_angle
 int8 back_right_angle
+int32 front_left_current
+int32 front_right_current
+int32 back_left_current
+int32 back_right_current
+int32 front_left_voltage
+int32 front_right_voltage
+int32 back_left_voltage
+int32 back_right_voltage
 string mode
