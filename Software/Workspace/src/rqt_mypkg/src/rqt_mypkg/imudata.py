@@ -25,17 +25,17 @@ class imuThread(QtCore.QThread):
     def callback(self, data):
         self.emit(QtCore.SIGNAL('updateImu(PyQt_PyObject)'), data)
 
-
 class imu_dialog:
 
     def __init__(self):
         rp = rospkg.RosPack()
         imu_file = os.path.join(rp.get_path('rqt_mypkg'), 'resource', 'RoverUI_imu.ui')
         self._dialog = loadUi(imu_file)
-        self.startImu()
+
+        self.imuT = imuThread()
 
     def startImu(self):
-        self.imuT = imuThread()
+        self.imuT.running = True
         self._dialog.connect(self.imuT, QtCore.SIGNAL('updateImu(PyQt_PyObject)'), self.updateImu, Qt.QueuedConnection)
         self.imuT.start()
 
@@ -51,6 +51,8 @@ class imu_dialog:
         self.yaw = euler[2] * 180 / math.pi + 180
 
     def updateImu(self, data):
+
+        # print("Imu thread running")
 
         self.getEuler(data)
 

@@ -41,6 +41,7 @@
 
 #include "microstrain_mip_node/3dmgx3.h"
 
+#include "ros/ros.h"
 #include "ros/time.h"
 #include "self_test/self_test.h"
 #include "diagnostic_msgs/DiagnosticStatus.h"
@@ -306,6 +307,7 @@ public:
     {
       static double prevtime = 0;
       double starttime = ros::Time::now().toSec();
+      // ros::Rate loop_rate(50);
       if (prevtime && prevtime - starttime > 0.05)
       {
         ROS_WARN("Full IMU loop took %f ms. Nominal is 10ms.", 1000 * (prevtime - starttime));
@@ -324,6 +326,7 @@ public:
       starttime = ros::Time::now().toSec();
       imu_data_pub_.publish(reading);
       endtime = ros::Time::now().toSec();
+      // loop_rate.sleep();
       if (endtime - starttime > 0.05)
       {
         ROS_WARN("Publishing took %f ms. Nominal is 10 ms.", 1000 * (endtime - starttime));
@@ -673,8 +676,7 @@ public:
   }
 };
 
-int
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
   ros::init(argc, argv, "microstrain_3dmgx3_node");
 

@@ -1,47 +1,60 @@
 #include <ArduinoHardware.h>
 #include <Servo.h>
-#include <ros.h>
-#include <std_msgs/Empty.h>
 
 //do a half half voltage divider w/ green=GND, red=+5 yellow=FB
 #define PIN_CAM_ROTATE  2//backward/forward controlled PWM
-#define CAM_ROTATE_STOP 1354
+#define CAM_ROTATE_STOP 1360
 #define CAM_ROTATE_CW   CAM_ROTATE_STOP + 50
 #define CAM_ROTATE_CCW  CAM_ROTATE_STOP - 50
 
 #define PIN_CAM_PITCH   3//position controlled PWM
+#define PIN_CAM_ZOOM    8
 
 Servo srvCamRot, srvCamPitch;
-
-ros::NodeHandle nh;
-
-void rosCallback(const std_msgs::Empty& msg){
-    
-}
-
-ros::Subscriber<std_msgs::Empty> rosSub("toggle_led", &rosCallback );
 
 void setup(){
     srvCamRot.attach(PIN_CAM_ROTATE);
     srvCamRot.writeMicroseconds(CAM_ROTATE_STOP);
 
-    camRotateCCW();
+    // camRotateCCW();
+    Serial.begin(9600);
 
     srvCamPitch.attach(PIN_CAM_PITCH);
-    camPitch(125);
 
+    char v = 140;
 
-    nh.initNode();
-    nh.subscribe(rosSub);
+    Serial.println((uint8_t) v);
+    //srvCamPitch.write((int) v);
+    //camPitch(160);
+
+    // pinMode(PIN_CAM_ZOOM, OUTPUT);
+    // digitalWrite(PIN_CAM_ZOOM, LOW);
+    // delay(1000);
+    // pinMode(PIN_CAM_ZOOM, INPUT);
+    // delay(1000);
+
+    // pinMode(PIN_CAM_ZOOM, OUTPUT);
+    // analogWrite(PIN_CAM_ZOOM, 255);
+    // delay(1000);
 }
 
 void loop(){
-    // camRotateCCW();
-    camPitch(110);
-    delay(1000);
-    // camRotateCW();
-    camPitch(140);
-    delay(1000);
+    // // camRotateCCW();
+    // camPitch(120);
+    // delay(1000);
+    // // camRotateCW();
+    // camPitch(130);
+    // delay(1000);
+
+    // pinMode(PIN_CAM_ZOOM, OUTPUT);
+    // digitalWrite(PIN_CAM_ZOOM, LOW);
+    // delay(2000);
+    // pinMode(PIN_CAM_ZOOM, INPUT);
+    // delay(2000);
+
+    // pinMode(PIN_CAM_ZOOM, OUTPUT);
+    // analogWrite(PIN_CAM_ZOOM, 255);
+    // delay(2000);
 }
 
 void camRotateCW(){
@@ -54,4 +67,12 @@ void camRotateCCW(){
 
 void camPitch(int angle){
     srvCamPitch.write(angle);
+}
+
+void camZoomIn(){
+
+}
+
+void camZoomOut(){
+
 }
