@@ -14,8 +14,7 @@ class RoboClaw:
         self.ticks_per_degree = 70.368
         self.rotation_orientation = rotation_orientation
 
-    def __convert_true_values_to_mod(self):
-        ticks = self.readM1encoder()[0]
+    def __convert_true_values_to_mod(self, ticks):
         return ticks - 2**32 if ticks > 2**31 else ticks
 
     def getAngle(self, addition = 0):

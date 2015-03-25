@@ -101,6 +101,7 @@ class Steering:
             self.angle = [self.steering_calc.front_left_angle, self.steering_calc.front_right_angle, self.steering_calc.back_left_angle, self.steering_calc.back_right_angle]
 
     def start(self):
+        loop_counter = 0
         [controller.ResetEncoderCnts() for controller in self.controllers]
             
         while not rospy.is_shutdown():
@@ -115,7 +116,6 @@ class Steering:
                             self.rate.sleep()
                         self.finish_homing()
                     else:
-                        self.info_pub.publish(self._get_info());
                         [self.run(controller, velocity) for controller, velocity in zip(self.controllers, self.velocity)]
                         [self.rotate(controller, angle * 70.368) for controller, angle in zip(self.controllers, self.angle)]
                 except Exception, e:
@@ -133,6 +133,12 @@ class Steering:
                 self.print_controller("Back Right", self.controllerBR, self.steering_calc.back_right_angle)
             if self.joystick.x:
                 self.print_controller("Back Left", self.controllerBL, self.steering_calc.back_left_angle)
+
+            if loop_counter % 10 == 0:
+                self.info_pub.publish(self._get_info())
+
+            loop_counter = loop_counter + 1
+
             self.rate.sleep()
 
         self.stop_run()
@@ -253,8 +259,9 @@ class Steering:
         # Convert the 0-1 range into a value in the right range.
         return rightMin + (valueScaled * rightSpan)
 
-    def _get_info():
+    def _get_info(self):
         rover_info = RoverInfo()
+
         # Information from the joystick
         rover_info.front_left_angle = self.steering_calc.front_left_angle
         rover_info.front_right_angle = self.steering_calc.front_right_angle
@@ -268,16 +275,16 @@ class Steering:
         rover_info.real_back_right_angle  = self.controllerBR.getAngle()
 
         # Current information from the motor controller
-        rover_info.real_front_left_current  = max(self.controllerFL.readcurrents())
-        rover_info.real_front_right_current = max(self.controllerFR.readcurrents())
-        rover_info.real_back_left_current   = max(self.controllerBL.readcurrents())
-        rover_info.real_back_right_current  = max(self.controllerBR.readcurrents())
+        rover_info.front_left_current  = max(self.controllerFL.readcurrents())
+        rover_info.front_right_current = max(self.controllerFR.readcurrents())
+        rover_info.back_left_current   = max(self.controllerBL.readcurrents())
+        rover_info.back_right_current  = max(self.controllerBR.readcurrents())
 
         # Voltage information from the motor controller
-        rover_info.real_front_left_voltage  = self.controllerFL.readmainbattery()
-        rover_info.real_front_right_voltage = self.controllerFR.readmainbattery()
-        rover_info.real_back_left_voltage   = self.controllerBL.readmainbattery()
-        rover_info.real_back_right_voltage  = self.controllerBR.readmainbattery()
+        rover_info.front_left_voltage  = self.controllerFL.readmainbattery()
+        rover_info.front_right_voltage = self.controllerFR.readmainbattery()
+        rover_info.back_left_voltage   = self.controllerBL.readmainbattery()
+        rover_info.back_right_voltage  = self.controllerBR.readmainbattery()
         return rover_info
 
 if __name__ == '__main__':
