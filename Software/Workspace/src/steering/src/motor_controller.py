@@ -134,7 +134,7 @@ class Steering:
             if self.joystick.x:
                 self.print_controller("Back Left", self.controllerBL, self.steering_calc.back_left_angle)
 
-            if loop_counter % 10 == 0:
+            if loop_counter % 5 == 0:
                 self.info_pub.publish(self._get_info())
 
             loop_counter = loop_counter + 1
