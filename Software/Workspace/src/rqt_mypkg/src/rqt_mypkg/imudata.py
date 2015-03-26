@@ -52,8 +52,6 @@ class imuWidget:
 
     def updateImu(self, data):
 
-        # print("Imu thread running")
-
         self.getEuler(data)
 
         self._widget.lineEdit_Quat_x.setText(QString(data.orientation.x))

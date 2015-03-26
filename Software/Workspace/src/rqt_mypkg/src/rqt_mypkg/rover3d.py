@@ -39,6 +39,8 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         self.r2d_widget = OrientWidget(rover2dWidget)
 
+        self.imuOn = False
+
         self.object = 0
         self.xRot = 0
         self.yRot = 0
@@ -62,12 +64,16 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.magenta = QtGui.QColor.fromCmykF(0.0, 1.0, 0.0, 0.0)
 
         # self.setFixedSize(300,300)
-        self.startImu()
+        # self.startImu()
 
     def startImu(self):
+        self.imuOn = True
         self.imuT = imuThread()
         self.connect(self.imuT, QtCore.SIGNAL('updateImu(PyQt_PyObject)'), self.updateImu, Qt.QueuedConnection)
         self.imuT.start()
+
+    def killImu(self):
+        self.imuOn = False
 
     def calibrateImu(self):
         self.roll_offset = -self.roll
@@ -86,31 +92,37 @@ class GLWidget(QtOpenGL.QGLWidget):
         return angle
 
     def updateImu(self, data):
-        self.prev_roll = self.roll
-        self.prev_pitch = self.pitch
-        self.prev_yaw = self.yaw
-        quaternion = (data.orientation.x,
-         data.orientation.y,
-         data.orientation.z,
-         data.orientation.w)
-        euler = tf.transformations.euler_from_quaternion(quaternion)
-        self.roll = euler[0] * 180 / math.pi + 180 + self.roll_offset
-        self.pitch = euler[1] * 180 / math.pi + 180 + self.pitch_offset
-        self.yaw = euler[2] * 180 / math.pi + 180 + self.yaw_offset
+        if (imuOn == False):
+            self.imuT.exit()
+            self.xRot = 0
+            self.yRot = 0
+            self.zRot = 0
+        else:
+            self.prev_roll = self.roll
+            self.prev_pitch = self.pitch
+            self.prev_yaw = self.yaw
+            quaternion = (data.orientation.x,
+             data.orientation.y,
+             data.orientation.z,
+             data.orientation.w)
+            euler = tf.transformations.euler_from_quaternion(quaternion)
+            self.roll = euler[0] * 180 / math.pi + 180 + self.roll_offset
+            self.pitch = euler[1] * 180 / math.pi + 180 + self.pitch_offset
+            self.yaw = euler[2] * 180 / math.pi + 180 + self.yaw_offset
 
-        if not math.isnan(self.roll) and not math.isnan(self.prev_roll):
-            if int(math.floor(self.roll)) != int(math.floor(self.prev_roll)):
-                self.setXRotation(self.roll * 16)
-                self.r2d_widget.setIncline(self.roll)
-                self.r2d_widget.update()
+            if not math.isnan(self.roll) and not math.isnan(self.prev_roll):
+                if int(math.floor(self.roll)) != int(math.floor(self.prev_roll)):
+                    self.setXRotation(self.roll * 16)
+                    self.r2d_widget.setIncline(self.roll)
+                    self.r2d_widget.update()
 
-        if not math.isnan(self.pitch) and not math.isnan(self.prev_pitch):
-            if int(math.floor(self.pitch)) != int(math.floor(self.prev_pitch)):
-                self.setZRotation(-self.pitch * 16)
+            if not math.isnan(self.pitch) and not math.isnan(self.prev_pitch):
+                if int(math.floor(self.pitch)) != int(math.floor(self.prev_pitch)):
+                    self.setZRotation(-self.pitch * 16)
 
-        if not math.isnan(self.yaw) and not math.isnan(self.prev_yaw):
-            if int(math.floor(self.yaw)) != int(math.floor(self.prev_yaw)):
-                self.setYRotation(self.yaw * 16)
+            if not math.isnan(self.yaw) and not math.isnan(self.prev_yaw):
+                if int(math.floor(self.yaw)) != int(math.floor(self.prev_yaw)):
+                    self.setYRotation(self.yaw * 16)
 
 
     def minimumSizeHint(self):

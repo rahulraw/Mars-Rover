@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
         # self.controlLayout.addWidget(self.pb_imu)
         self.controlLayout.addWidget(self.pb_cam_start)
         self.controlLayout.addWidget(self.pb_calibrateImu)
-        # self.controlLayout.addWidget(self.pb_kill_imu)
+        self.controlLayout.addWidget(self.pb_imu_start)
         self.controlArea.setLayout(self.controlLayout)
 
         self.sensingArea = QtGui.QScrollArea()
@@ -136,9 +136,8 @@ class MainWindow(QMainWindow):
         self.pb_cam_start.clicked[bool].connect(self._handle_pb_cam_start_clicked)
         self.pb_calibrateImu = QtGui.QPushButton('Calibrate IMU')
         self.pb_calibrateImu.clicked[bool].connect(self._handle_pb_calibrateImu_clicked)
-
-        self.pb_kill_imu = QtGui.QPushButton('Kill IMU')
-        self.pb_kill_imu.clicked[bool].connect(self._handle_pb_killImu_clicked)
+        self.pb_imu_start = QtGui.QPushButton('Start IMU')
+        self.pb_imu_start.clicked[bool].connect(self._handle_pb_imu_start_clicked)
 
     def createLabels(self):
         self.BLCurrent = 0.0
@@ -324,10 +323,21 @@ class MainWindow(QMainWindow):
         # self.imuWidget._widget.show()
 
     def _handle_pb_cam_start_clicked(self):
-        self.camWidget.startCamera()
+        if (self.camWidget.cameraOn == False):
+            self.camWidget.startCamera()
+            self.pb_cam_start.setText("Stop Camera")
+        else:
+            self.camWidget.stopCamera()
+            self.pb_cam_start.setText("Start Camera")
 
     def _handle_pb_calibrateImu_clicked(self):
         self.glWidget.calibrateImu()
 
-    def _handle_pb_killImu_clicked(self):
-        self.imuWidget.exitImu()
+    def _handle_pb_imu_start_clicked(self):
+        if (self.glWidget.imuOn == False):
+            self.glWidget.startImu()
+            self.pb_imu_start.setText("Kill IMU")
+        else:
+            self.glWidget.killImu()
+            self.pb_cam_start.setText("Start IMU")
+

@@ -1,7 +1,7 @@
 import numpy as np
-import rospy
+import rospy, rospkg
 import serial
-import sys
+import sys, os
 import cv, cv2
 
 from lib.bridges.bwbridge import BWBridge
@@ -22,7 +22,6 @@ except ImportError:
     QString = str
 
 class camThread(QtCore.QThread):
-
     def __init__(self):
         QtCore.QThread.__init__(self)
         self.topic = rospy.get_param('~topic', 'video_stream')
@@ -62,6 +61,8 @@ class cameraWidget(QtGui.QWidget):
         else:
             self.bridge = RGBBridge()
 
+        self.cameraOn = False
+
         self.cam_ymin = 140
         self.cam_ymax = 170
 
@@ -88,6 +89,10 @@ class cameraWidget(QtGui.QWidget):
         self.cameraBox.addWidget(self.camControlArea)
         self.setLayout(self.cameraBox)
         # self.setFixedSize(500, 600)
+
+        rp = rospkg.RosPack()
+        self.imgPath = os.path.join(rp.get_path('rqt_mypkg'), 'src/rqt_mypkg/resource', 'arthrobot.jpg')
+        self.cameraWindow.setPixmap(QtGui.QPixmap(self.imgPath))
 
         self.topic = 'CameraPositions'
         self.node = 'CameraMount'
@@ -134,16 +139,24 @@ class cameraWidget(QtGui.QWidget):
 
     def startCamera(self):
         # self.camera.start()
+        self.cameraOn = True
         self.cameraThread = camThread()
         self.connect(self.cameraThread, QtCore.SIGNAL('start(QImage)'), self.start, Qt.QueuedConnection)
         self.cameraThread.start()
+
+    def stopCamera(self):
+        self.cameraOn = False     
 
     def setImage(self, pixmap):
         self.cameraWindow.setPixmap(pixmap)
 
     def start(self, cv_image):
-        pixmap = QPixmap.fromImage(cv_image)
-        self.setImage(pixmap)
+        if (self.cameraOn == False):
+            self.cameraThread.exit()
+            self.cameraWindow.setPixmap(QtGui.QPixmap(imgPath))
+        else:
+            pixmap = QPixmap.fromImage(cv_image)
+            self.setImage(pixmap)
 
     def createLabels(self):
         self.label_cam_zoom = QtGui.QLabel('Zoom')
