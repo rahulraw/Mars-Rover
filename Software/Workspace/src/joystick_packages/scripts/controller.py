@@ -11,7 +11,7 @@ class Joystick:
     def __init__(self):
         self.topic = rospy.get_param('~topic', 'RCValues')
         self.node = rospy.get_param('~node', 'joystick') 
-        self.pipe = open(rospy.get_param('~input_id', '/dev/input/js0'), 'r')
+        self.pipe = open(rospy.get_param('~input_id', '/dev/controller'), 'r')
         self.pconstant = 0.2
         self.controller = Controller()
         self.set_buttons = [self.set_square, self.set_x, self.set_circle, self.set_triangle, self.set_left_bumper, self.set_right_bumper, self.set_left_trigger, self.set_right_trigger, self.set_share, self.set_options, self.set_left_stick, self.set_right_stick, self.set_killswitch, self.set_touch_button]
