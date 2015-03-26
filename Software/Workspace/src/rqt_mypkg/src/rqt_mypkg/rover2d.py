@@ -10,7 +10,7 @@ class OrientWidget(QtGui.QWidget):
 
     def __init__(self, parent = None):
         super(OrientWidget, self).__init__(parent)
-        rospy.Subscriber('RoverInfo', RoverInfo, self._wheels_moved)
+        rospy.Subscriber('RoverInfo', RoverInfo, self.wheels_moved)
 
         self.createScrollbars()
 
@@ -19,9 +19,15 @@ class OrientWidget(QtGui.QWidget):
         self.topRightWheelAngle = 0.0
         self.botLeftWheelAngle = 0.0
         self.botRightWheelAngle = 0.0
+
+        self.realTopLeftWheelAngle = 0.0
+        self.realTopRightWheelAngle = 0.0
+        self.realBotLeftWheelAngle = 0.0
+        self.realBotRightWheelAngle = 0.0
+
         self.mode = 'default'
 
-        self.topViewX = 35
+        self.topViewX = 30
         self.topViewY = 35
         self.topViewWidth = 50
         self.topViewHeight = 75
@@ -82,11 +88,21 @@ class OrientWidget(QtGui.QWidget):
         p.setPen(Qt.black)
         p.setBrush(QtGui.QBrush(QtCore.Qt.gray, self.style))
         p.drawRect(self.topView)
-        p.drawText(QPoint(self.topViewX + 100, self.topViewY), 'Top Left: ' + str(self.topLeftWheelAngle) + ' deg')
-        p.drawText(QPoint(self.topViewX + 100, self.topViewY + 25), 'Top Right: ' + str(self.topRightWheelAngle) + ' deg')
-        p.drawText(QPoint(self.topViewX + 100, self.topViewY + 50), 'Bottom Left: ' + str(self.botLeftWheelAngle) + ' deg')
-        p.drawText(QPoint(self.topViewX + 100, self.topViewY + 75), 'Bottom Right: ' + str(self.botRightWheelAngle) + ' deg')
-        p.drawText(QPoint(self.topViewX + 100, self.topViewY + 100), 'Mode: ' + self.mode)
+        p.drawText(QPoint(self.topViewX + 80, self.topViewY), 'Top Left: ')
+        p.drawText(QPoint(self.topViewX + 80, self.topViewY + 25), 'Top Right: ')
+        p.drawText(QPoint(self.topViewX + 80, self.topViewY + 50), 'Bot Left: ')
+        p.drawText(QPoint(self.topViewX + 80, self.topViewY + 75), 'Bot Right: ')
+        p.drawText(QPoint(self.topViewX + 80, self.topViewY + 100), 'Mode: ')
+        p.drawText(QPoint(self.topViewX + 150, self.topViewY), str(self.topLeftWheelAngle))
+        p.drawText(QPoint(self.topViewX + 150, self.topViewY + 25), str(self.topRightWheelAngle))
+        p.drawText(QPoint(self.topViewX + 150, self.topViewY + 50), str(self.botLeftWheelAngle))
+        p.drawText(QPoint(self.topViewX + 150, self.topViewY + 75), str(self.botRightWheelAngle))
+        p.setPen(Qt.red)
+        p.drawText(QPoint(self.topViewX + 180, self.topViewY), ' | ' + str(self.realTopLeftWheelAngle) + '     deg')
+        p.drawText(QPoint(self.topViewX + 180, self.topViewY + 25), ' | ' + str(self.realTopRightWheelAngle) + '     deg')
+        p.drawText(QPoint(self.topViewX + 180, self.topViewY + 50), ' | ' + str(self.realBotLeftWheelAngle) + '     deg')
+        p.drawText(QPoint(self.topViewX + 180, self.topViewY + 75), ' | ' + str(self.realBotRightWheelAngle) + '     deg')
+        p.drawText(QPoint(self.topViewX + 125, self.topViewY + 100), self.mode)
 
     def drawWheelOrientation(self, p, wheel, angle):
         p.setPen(Qt.black)
@@ -122,7 +138,7 @@ class OrientWidget(QtGui.QWidget):
         p.translate(-dx, -dy)
         p.rotate(-self.incline)
 
-        p.drawText(self.sideViewX + 150, self.sideViewY + 70, 'Incline: ' + str(-self.incline+360) + ' deg')
+        p.drawText(self.sideViewX + 130, self.sideViewY + 70, 'Incline: ' + str(-self.incline+360) + ' deg')
         self.update()
 
     def createScrollbars(self):
@@ -130,12 +146,17 @@ class OrientWidget(QtGui.QWidget):
         self.scrollbar_wheel.setOrientation(QtCore.Qt.Horizontal)
         self.scrollbar_wheel.setMinimum(0)
         self.scrollbar_wheel.setMaximum(360)
-        self.scrollbar_wheel.connect(self.scrollbar_wheel, QtCore.SIGNAL('sliderMoved(int)'), self._wheels_moved)
+        self.scrollbar_wheel.connect(self.scrollbar_wheel, QtCore.SIGNAL('sliderMoved(int)'), self.wheels_moved)
 
-    def _wheels_moved(self, value):
+    def wheels_moved(self, value):
         self.topLeftWheelAngle = float(value.front_left_angle)
         self.topRightWheelAngle = float(value.front_right_angle)
         self.botLeftWheelAngle = float(value.back_left_angle)
         self.botRightWheelAngle = float(value.back_right_angle)
+
+        self.realTopLeftWheelAngle = float(value.real_front_left_angle)
+        self.realTopRightWheelAngle = float(value.real_front_right_angle)
+        self.realBotLeftWheelAngle = float(value.real_back_left_angle)
+        self.realBotRightWheelAngle = float(value.real_back_right_angle)
         self.mode = value.mode
         self.update()
