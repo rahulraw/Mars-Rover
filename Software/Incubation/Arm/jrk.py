@@ -10,7 +10,7 @@ class Jrk:
     TIMEOUT_WRITING = -4
 
     def __init__(self, device):
-        self.port = serial.Serial("/dev/ttyACM0", baudrate=9600, timeout=1)
+        self.port = serial.Serial(device, baudrate=9600, timeout=1)
 
     def writeByte(self, command):
         try:
@@ -41,7 +41,6 @@ class Jrk:
         
         byte1 = 0xC0 + (target & 0x1F)
         byte2 = (target >> 5) & 0x7F
-
         result = self.writeByte(byte1);
         if result != 0:
             return result
@@ -50,6 +49,21 @@ class Jrk:
         if result != 0:
             return result
 
+        return 0
+    
+    def jrkMotorStop(self):
+        
+        byte1 = 0xFF 
+        #byte2 = 0x87
+        result = self.writeByte(byte1);
+        if result != 0:
+            return result
+
+        """
+        result = self.writeByte(byte2);
+        if result != 0:
+            return result
+        """
         return 0
 
     def jrkGetFeedBack(self):

@@ -4,38 +4,19 @@ import jrk
 from joystick_packages.msg import Controller
 
 class JrkArm:
-
-    JRK_TARGET_MIN = 100
-    JRK_TARGET_MAX = 4000
-
     def __init__(self, node_id):
         self.jrk = jrk.Jrk(node_id)
         self.direction = 0
         self.stopped = True
-        self.target = self.input_from_target(self.jrk.jrkGetFeedBack())
-
-    def contain(self, target):
-        return int(math.floor(
-            max(
-                self.JRK_TARGET_MIN, 
-                min(self.JRK_TARGET_MAX, target)
-            )
-        ))
-
-    def get_stop_target(self):
-        return self.contain(self.input_from_target(self.jrk.jrkGetFeedBack()))
-
-    def input_from_target(self, target):
-        return self.contain(target * 1.142 - 88.782)
+        self.jrk.jrkMotorStop()
     
     def set_direction(self, direction):
         self.direction = direction
 
     def run(self):
-
         if not self.direction and not self.stopped:
             self.stopped = True
-            self.jrk.jrkSetTarget(self.get_stop_target())
+            self.jrk.jrkMotorStop()
         elif self.direction:
             self.stopped = False
             target = int(2000 + 2000 * self.direction)
