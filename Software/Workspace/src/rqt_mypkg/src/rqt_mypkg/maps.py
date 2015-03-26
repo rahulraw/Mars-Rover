@@ -17,10 +17,10 @@ class gmapsWidget(QtGui.QWidget):
         self.destAddressEdit.editingFinished.connect(self.goCoords)
         self.destCoordsEdit.editingFinished.connect(self.goCoords)
 
-        l.addRow('Start Address:', self.addressEdit)
-        l.addRow('Start Coords:', self.coordsEdit)
-        l.addRow('Dest Address:', self.destAddressEdit)
-        l.addRow('Dest Coords:', self.destCoordsEdit)
+        l.addRow('Address:', self.addressEdit)
+        l.addRow('Coords:', self.coordsEdit)
+        # l.addRow('Dest Address:', self.destAddressEdit)
+        # l.addRow('Dest Coords:', self.destCoordsEdit)
 
         self.pb_route = QtGui.QPushButton("Route")
 
@@ -43,7 +43,7 @@ class gmapsWidget(QtGui.QWidget):
 
         self.gmap.centerAt(41.35,2.05)
         self.gmap.setZoom(13)
-        coords = self.gmap.centerAtAddress("Pau Casals 3, Santa Coloma de Cervello")
+        coords = self.gmap.centerAtAddress("Waterloo, Ontario")
         # Many icons at: https://sites.google.com/site/gmapsdevelopment/
         self.gmap.addMarker("MyDragableMark", *coords, **dict(
             icon="http://google.com/mapfiles/ms/micons/blue-dot.png",
