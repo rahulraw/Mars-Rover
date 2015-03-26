@@ -6,10 +6,22 @@ import time
 import math
 
 class RoboClaw:
-    def __init__(self, deviceId = '/dev/ttyACM1'):
+    def __init__(self, deviceId = '/dev/ttyACM1', rotation_orientation = 1):
         self.checksum = 0
         self.port = serial.Serial(deviceId, baudrate=38400, timeout=1)
         self.speed = 0
+        self.offset = 0
+        self.ticks_per_degree = 70.368
+        self.rotation_orientation = rotation_orientation
+
+    def __convert_true_values_to_mod(self, ticks):
+        return ticks - 2**32 if ticks > 2**31 else ticks
+
+    def getAngle(self, addition = 0):
+        return self.getTicks(addition * self.ticks_per_degree) / self.ticks_per_degree
+
+    def getTicks(self, addition = 0):
+        return (self.__convert_true_values_to_mod(self.readM1encoder()[0]) - self.offset + addition)
 
     def reconnect(self):
         self.port.close()

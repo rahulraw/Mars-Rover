@@ -4,25 +4,28 @@ import rospy
 import sys
 import traceback
 
-from cv_bridge import CvBridge, CvBridgeError
-from lib.messages import Messages
+from lib.bridges.bwbridge import BWBridge
+from lib.bridges.rgbbridge import RGBBridge
 from lib.webcam import Webcam, ImageNoneTypeException
-from sensor_msgs.msg import Image
+from cameras.msg import GrayImage
+from config import Config
 
 class Camera:
     def __init__(self):
         self.topic = rospy.get_param('~topic', 'video_stream')
         self.node = rospy.get_param('~node', 'camera') 
-        self.camera_id = int(rospy.get_param('~camera_id', 0))
-        self.scale = float(rospy.get_param('~scale', 0.5))
-        self.webcam = Webcam(self.scale, self.camera_id)
+        self.camera_id = int(rospy.get_param('~camera_id', 1))
+        self.webcam = Webcam(Config.scale, self.camera_id)
         self.webcam.start_capture()
-        self.bridge = CvBridge()
+        if Config.gray:
+            self.bridge = BWBridge()
+        else:
+            self.bridge = RGBBridge()
 
     def start(self):
         rospy.init_node(self.node, anonymous = True)
 
-        self.pub = rospy.Publisher(self.topic, Image, queue_size = 10)
+        self.pub = rospy.Publisher(self.topic, self.bridge.getType(), queue_size = 10)
         self.rate = rospy.Rate(10)
 
         while not rospy.is_shutdown():
@@ -36,10 +39,8 @@ class Camera:
                 
             rospy.loginfo("Image published at %s" %time)
 
-            try:
-                self.pub.publish(self.bridge.cv2_to_imgmsg(image, "bgr8"))
-            except CvBridgeError, e:
-                rospy.loginfo(Messages.cv_bridge_error %e)
+            image = self.bridge.to_imgmsg(image)
+            self.pub.publish(image)
 
             self.rate.sleep()
         

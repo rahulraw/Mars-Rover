@@ -1,10 +1,11 @@
-#!usr/bin/env python
+#!/usr/bin/env python
+
 import time
 import rospy
 
 from joystick_packages.msg import Controller, ControllerRaw
 from std_msgs.msg import Bool
-#from std_msgs.msg import Int16MultiArray
+from auto_shutdown import AutoShutdown
 
 class Joystick:
     def __init__(self):
@@ -16,13 +17,15 @@ class Joystick:
         self.set_buttons = [self.set_square, self.set_x, self.set_circle, self.set_triangle, self.set_left_bumper, self.set_right_bumper, self.set_left_trigger, self.set_right_trigger, self.set_share, self.set_options, self.set_left_stick, self.set_right_stick, self.set_killswitch, self.set_touch_button]
         self.set_axis = [self.set_left_joy_x, self.set_left_joy_y, self.set_right_joy_x, self.set_left_brake, self.set_right_brake, self.set_right_joy_y, self.set_pad_x, self.set_pad_y]
         self.current_time = 0
-        self.shut_off = False
+        self.new_time = 0
     
-    def start(self):
         rospy.init_node(self.node, anonymous = True)
         self.pub = rospy.Publisher(self.topic, Controller, queue_size = 10)
-        self.pub_shutoff = rospy.Publisher('shutoff', Bool, queue_size = 10)
 
+        self.auto_shutdown = AutoShutdown(10*60)
+        self.auto_shutdown.start()
+
+    def start(self):
         brake_value = 0
 
         msg = []
@@ -32,14 +35,7 @@ class Joystick:
         
         while not rospy.is_shutdown():
             for char in self.pipe.read(1):
-                
-                if time.time() - self.current_time > 20*60:
-                    #Publish to arduino to shut-off
-                    self.shut_off = True
-                    self.pub_shutoff.publish(self.shut_off)                   
-
-                self.current_time = time.time();
-                
+                self.auto_shutdown.updateTime()
                 msg += [ord(char)]
                 
                 if len(msg) == 8:
@@ -91,10 +87,12 @@ class Joystick:
             self.controller.triangle = 1 - self.controller.triangle
 
     def set_left_bumper(self, value):
-        self.controller.mode = (self.controller.mode - 1) % 4
+        if value == 1:
+            self.controller.mode = (self.controller.mode - 1) % 4
 
     def set_right_bumper(self, value):
-        self.controller.mode = (self.controller.mode + 1) % 4
+        if value == 1:
+            self.controller.mode = (self.controller.mode + 1) % 4
 
     def set_left_trigger(self, value):
         self.controller.left_trigger = value
@@ -119,7 +117,8 @@ class Joystick:
             self.controller.killswitch = 1 - self.controller.killswitch
 
     def set_touch_button(self, value):
-        self.controller.touch_button = value
+        if value == 1:
+            self.controller.touch_button = 1 - self.controller.touch_button
 
     def set_left_joy_x(self, value):
         self.controller.left_joy_x = value
