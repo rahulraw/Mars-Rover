@@ -1,5 +1,7 @@
 ./Software/Workspace/src/CMakeLists.txt
 *.pyc
 *.py~
+*.swp
 *build*
 *devel*
+*rosserial*
