@@ -1,0 +1,24 @@
+<launch>
+    <!-- Serial Comms -->
+    <node name="serial_python_arduino" pkg="serial_python_arduino" type="serial_python_arduino.py">
+        <param name="serial_port" value="/dev/arduino"/>
+        <param name="node" value="serial_node"/>
+    </node>
+
+    <!-- Driving -->
+    <node name="RoboClaw" pkg="steering" type="motor_controller.py">
+        <param name="node" value="/dev/arduino"/>
+        <param name="controller_topic" value="serial_node"/>
+        <param name="homing_topic" value="/dev/arduino"/>
+        <param name="rover_info_topic" value="serial_node"/>
+        <param name="roboclaw_fl_id" value="/dev/roboclawfl"/>
+        <param name="roboclaw_bl_id" value="/dev/roboclawbl"/>
+        <param name="roboclaw_br_id" value="/dev/roboclawbr"/>
+        <param name="roboclaw_fr_id" value="/dev/roboclawfr"/>
+    </node>
+
+    <node name="camera" pkg="rqt_mypkg" type="camera.py"/>
+    <!-- Arm -->
+    <!-- Camera -->
+
+</launch>

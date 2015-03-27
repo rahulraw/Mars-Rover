@@ -19,16 +19,6 @@ class Steering:
 
         self.joystick = Controller()
 
-        self.node = rospy.get_param('~node', 'RoboClaw') 
-        self.controller_topic = rospy.get_param('~controller_topic', 'RCValues') 
-        self.homing_topic = rospy.get_param('~homing_topic', 'HomingInfo') 
-        self.rover_info_topic = rospy.get_param('~rover_info_topic', 'RoverInfo') 
-
-        self.roboclaw_fl_id = rospy.get_param('~roboclaw_fl_id', '/dev/roboclawfl') 
-        self.roboclaw_fr_id = rospy.get_param('~roboclaw_fr_id', '/dev/roboclawfr') 
-        self.roboclaw_br_id = rospy.get_param('~roboclaw_br_id', '/dev/roboclawbr') 
-        self.roboclaw_bl_id = rospy.get_param('~roboclaw_bl_id', '/dev/roboclawbl') 
-
         self.homing = False
 
         self.errorThres = 35
@@ -38,7 +28,17 @@ class Steering:
         self.beeper = Beeper(0.5, 1100)
         self.beeper.start()
 
-        rospy.init_node(self.node, anonymous=True)
+        rospy.init_node("RoboClaw", anonymous=True)
+
+        self.controller_topic = rospy.get_param('~controller_topic', 'RCValues')
+        self.homing_topic = rospy.get_param('~homing_topic', 'HomingInfo')
+        self.rover_info_topic = rospy.get_param('~rover_info_topic', 'RoverInfo')
+
+        self.roboclaw_fl_id = rospy.get_param('~roboclaw_fl_id', '/dev/roboclawfl')
+        self.roboclaw_fr_id = rospy.get_param('~roboclaw_fr_id', '/dev/roboclawfr')
+        self.roboclaw_br_id = rospy.get_param('~roboclaw_br_id', '/dev/roboclawbr')
+        self.roboclaw_bl_id = rospy.get_param('~roboclaw_bl_id', '/dev/roboclawbl')
+
         rospy.Subscriber(self.controller_topic, Controller, self.callback)
         rospy.Subscriber(self.homing_topic, HomingInfo, self.homing_callback)
         self.info_pub = rospy.Publisher(self.rover_info_topic, RoverInfo, queue_size = 10)
