@@ -2,6 +2,12 @@
     <!-- Serial Comms -->
     <node name="serial_node" pkg="serial_python_arduino" type="serial_python_arduino.py">
         <param name="serial_port" value="/dev/arduino"/>
+        <param name="controller_topic" value="RCValues"/>
+        <param name="autoshutdown_topic" value="shutoff"/>
+        <param name="cameramount_topic" value="CameraMountInfo"/>
+        <param name="homing_topic" value="homing_info"/>
+
+
     </node>
 
     <!-- Driving -->
