@@ -13,7 +13,7 @@ class Arduino:
         self.ACCEPT_SERIAL = 255
         self.SEND_SERIAL = 254
         rospy.init_node("serial_node", anonymous=True)
-        self.serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0')
+        self.serial_port = rospy.get_param('~serial_port', '/dev/arduino')
         self.setup_topics()
         self.ser = serial.Serial(self.serial_port, 9600)
         self.rate = rospy.Rate(10)

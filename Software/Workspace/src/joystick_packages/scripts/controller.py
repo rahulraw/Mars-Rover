@@ -19,7 +19,7 @@ class Joystick:
         rospy.init_node("controller", anonymous = True)
 
         self.topic = rospy.get_param('~topic', 'RCValues')
-        self.pipe = open(rospy.get_param('~input_id', '/dev/controller'), 'r')
+        self.pipe = open(rospy.get_param('~input_id', '/dev/input/js1'), 'r')
 
         self.pub = rospy.Publisher(self.topic, Controller, queue_size = 10)
 
