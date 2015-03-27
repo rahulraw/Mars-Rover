@@ -2,19 +2,16 @@
     <!-- Input -->
     <node name="controller" pkg="joystick_packages" type="controller.py">
         <param name="input_id" value="/dev/controller"/>
-        <param name="node" value="controller"/>
         <param name="topic" value="RCValues"/>
     </node>
 
-    <node name="joystick1" pkg="joystick_packages" type="joystick.py">
+    <node name="joystick" pkg="joystick_packages" type="joystick.py">
         <param name="input_id" value="/dev/joystick1"/>
-        <param name="node" value="joystick1"/>
         <param name="topic" value="joystick1"/>
     </node>
 
     <node name="joystick2" pkg="joystick_packages" type="joystick.py">
         <param name="input_id" value="/dev/joystick2"/>
-        <param name="node" value="joystick2"/>
         <param name="topic" value="joystick2"/>
     </node>
 </launch>

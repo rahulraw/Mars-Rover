@@ -7,6 +7,7 @@ import traceback
 from lib.bridges.bwbridge import BWBridge
 from lib.bridges.rgbbridge import RGBBridge
 from lib.webcam import Webcam, ImageNoneTypeException
+from lib.messages import Messages
 from cameras.msg import GrayImage
 from config import Config
 
@@ -36,7 +37,7 @@ class Camera:
                 image = self.webcam.read_image()
             except ImageNoneTypeException, e:
                 rospy.loginfo(Messages.image_none_type %(time, e))
-                
+
             rospy.loginfo("Image published at %s" %time)
 
             image = self.bridge.to_imgmsg(image)
