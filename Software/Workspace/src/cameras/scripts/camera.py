@@ -7,6 +7,7 @@ import traceback
 from lib.bridges.bwbridge import BWBridge
 from lib.bridges.rgbbridge import RGBBridge
 from lib.webcam import Webcam, ImageNoneTypeException
+from lib.messages import Messages
 from cameras.msg import GrayImage
 from config import Config
 
@@ -14,7 +15,7 @@ class Camera:
     def __init__(self):
         self.topic = rospy.get_param('~topic', 'video_stream')
         self.node = rospy.get_param('~node', 'camera') 
-        self.camera_id = int(rospy.get_param('~camera_id', 1))
+        self.camera_id = int(rospy.get_param('~camera_id', 0))
         self.webcam = Webcam(Config.scale, self.camera_id)
         self.webcam.start_capture()
         if Config.gray:

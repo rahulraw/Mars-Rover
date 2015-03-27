@@ -2,51 +2,65 @@
 
 from joystick_packages.msg import Joystick
 from roboclaw import RoboClaw
+from jrk import Jrk
 
 import math
 import rospy
 import time
 import traceback
 
-class EndEffector:
-    def __init__(self, topic = 'RCValues', node = 'RoboClaw'):
+class ArmControl:
+    def __init__(self, node = 'ArmControl'):
         self.min_battery = 119;
 
         self.joystick1 = Joystick()
         self.joystick2 = Joystick()
-        self.node = node
-        self.topic = topic
 
-        rospy.init_node(self.node, anonymous=True)
+        rospy.init_node(node, anonymous=True)
         rospy.Subscriber("joystick1", Joystick, self.callback1)
         rospy.Subscriber("joystick2", Joystick, self.callback2)
+
         self.rate = rospy.Rate(5)
 
-        while not self.roboclaw_connect() and not rospy.is_shutdown():
+        while not self.motor_controller_connect() and not rospy.is_shutdown():
             self.rate.sleep()
 
-    def roboclaw_connect(self):
+    def motor_controller_connect(self):
         try:
-            print("Connecting to Roboclaws...")
-            self.endAndStick = RoboClaw("/dev/ttyACM1")
-            self.boom = RoboClaw("/dev/ttyACM2")
+            print("Connecting to motor controllers...")
+            self.boom = Jrk("/dev/boom")
+            self.stick = Jrk("/dev/stick")
+            self.endAndYaw = RoboClaw("/dev/endAndYaw")
             return True
         except:
             return False
 
+    def get_direction(self, value):
+        return int(0 if not value else value / abs(value))
+
     def callback1(self, data):
+        self.boom.set_direction(self.get_direction(controller.main_joy_y))
         self.joystick1 = data
 
     def callback2(self, data):
+        self.stick.set_direction(self.get_direction(data.main_joy_y))
         self.joystick2 = data
 
     def start(self):
+        self.boom.getErrorFlagsHalting()
+        self.stick.getErrorFlagsHalting()
+
         while not rospy.is_shutdown():
             if True or self.__check_batteries():
                 try: 
-                    self.run(self.endAndStick, self.joystick1.main_joy_x, 1)
-                    self.run(self.endAndStick, self.joystick1.main_joy_y, 2)
-                    self.run(self.boom, self.joystick2.main_joy_y, 2)
+                    self.boom.run()
+                    self.stick.run()
+
+                    # Joystick 1 controls motor 2 which is the yaw motor
+                    # self.run(self.endAndYaw, self.joystick1.main_joy_x, 2)
+
+                    # Joystick 2 controls motor 1 which is the end effector 
+                    self.run(self.endAndYaw, self.joystick2.main_joy_x, 1)
                 except:
                     pass
             else:
@@ -80,15 +94,14 @@ class EndEffector:
 
     def stop_run(self):
         try:
-            self.endAndStick.M1Forward(0)
-            self.endAndStick.M2Forward(0)
-            self.boom.M1Forward(0)
+            self.endAndYaw.M1Forward(0)
+            self.endAndYaw.M2Forward(0)
         except:
             traceback.print_exc()
 
     def __check_batteries(self):
         try:
-            if self.endAndStick.readmainbattery() < self.min_battery:
+            if self.endAndYaw.readmainbattery() < self.min_battery:
                 return False
         except:
             pass
@@ -96,6 +109,5 @@ class EndEffector:
         return True
 
 if __name__ == '__main__':
-    args = ["RCValues", "RoboClaw"]
-    endEffector = EndEffector(topic = args[0], node = args[1])
-    endEffector.start()
+    armControl = ArmControl()
+    armControl.start()

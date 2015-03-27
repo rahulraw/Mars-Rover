@@ -13,9 +13,11 @@ class Arduino:
         self.ACCEPT_SERIAL = 255
         self.SEND_SERIAL = 254
 
-        rospy.init_node('serial_bridge', anonymous=True)
+        self.node = rospy.get_param('~node', 'serial_bridge')
+        self.serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0')
+        rospy.init_node(self.node, anonymous=True)
         self.setup_topics()
-        self.ser = serial.Serial('/dev/ttyACM0', 9600)
+        self.ser = serial.Serial(self.serial_port, 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
         self.send_manipulator = False

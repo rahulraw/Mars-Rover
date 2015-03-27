@@ -14,13 +14,22 @@ import time
 import traceback
 
 class Steering:
-    def __init__(self, topic = 'RCValues', node = 'RoboClaw'):
+    def __init__(self):
         self.SAFETY_CONSTANT = 0.07
 
         self.joystick = Controller()
+
+        self.node = rospy.get_param('~node', 'RoboClaw') 
+        self.controller_topic = rospy.get_param('~controller_topic', 'RCValues') 
+        self.homing_topic = rospy.get_param('~homing_topic', 'HomingInfo') 
+        self.rover_info_topic = rospy.get_param('~rover_info_topic', 'RoverInfo') 
+
+        self.roboclaw_fl_id = rospy.get_param('~roboclaw_fl_id', '/dev/roboclawfl') 
+        self.roboclaw_fr_id = rospy.get_param('~roboclaw_fr_id', '/dev/roboclawfr') 
+        self.roboclaw_br_id = rospy.get_param('~roboclaw_br_id', '/dev/roboclawbr') 
+        self.roboclaw_bl_id = rospy.get_param('~roboclaw_bl_id', '/dev/roboclawbl') 
+
         self.homing = False
-        self.node = node
-        self.topic = topic
 
         self.errorThres = 35
         self.min_battery = 119
@@ -30,9 +39,10 @@ class Steering:
         self.beeper.start()
 
         rospy.init_node(self.node, anonymous=True)
-        rospy.Subscriber(self.topic, Controller, self.callback)
-        rospy.Subscriber("homing_info", HomingInfo, self.homing_callback)
-        self.info_pub = rospy.Publisher("RoverInfo", RoverInfo, queue_size = 10)
+        rospy.Subscriber(self.controller_topic, Controller, self.callback)
+        rospy.Subscriber(self.homing_topic, HomingInfo, self.homing_callback)
+        self.info_pub = rospy.Publisher(self.rover_info_topic, RoverInfo, queue_size = 10)
+
         self.rate = rospy.Rate(5)
 
         while not self.roboclaw_connect() and not rospy.is_shutdown():
@@ -54,10 +64,10 @@ class Steering:
     def roboclaw_connect(self):
         try:
             print("Connecting to Roboclaws...")
-            self.controllerFL = RoboClaw("/dev/roboclawfl", 1)
-            self.controllerFR = RoboClaw("/dev/roboclawfr", -1)
-            self.controllerBL = RoboClaw("/dev/roboclawbl", -1)
-            self.controllerBR = RoboClaw("/dev/roboclawbr", 1)
+            self.controllerFL = RoboClaw(self.roboclaw_fl_id, 1)
+            self.controllerFR = RoboClaw(self.roboclaw_fr_id, -1)
+            self.controllerBL = RoboClaw(self.roboclaw_bl_id, -1)
+            self.controllerBR = RoboClaw(self.roboclaw_br_id, 1)
             return True
         except:
             return False
@@ -288,6 +298,5 @@ class Steering:
         return rover_info
 
 if __name__ == '__main__':
-    args = ["RCValues", "RoboClaw"]
-    carsteering = Steering(topic = args[0], node = args[1])
+    carsteering = Steering()
     carsteering.start()
