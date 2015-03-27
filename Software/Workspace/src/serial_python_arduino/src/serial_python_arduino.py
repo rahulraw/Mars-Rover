@@ -103,10 +103,10 @@ class Arduino:
         self.messages = []
 
     def setup_topics(self):
-        rospy.Subscriber("RCValues", Controller, self.callback_manipulator, queue_size=1)
-        rospy.Subscriber("shutoff", Bool, self.callback_auto_shut_down, queue_size=1)
-        rospy.Subscriber("CameraMountInfo", CameraMountInfo, self.callback_camera_mount_info, queue_size=10)
-        self.homing_pub = rospy.Publisher("homing_info", HomingInfo, queue_size=1)
+        rospy.Subscriber(rospy.get_param('~controller_topic', 'RCValues'), Controller, self.callback_manipulator, queue_size=1)
+        rospy.Subscriber(rospy.get_param('~autoshutdown_topic', 'shutoff'), Bool, self.callback_auto_shut_down, queue_size=1)
+        rospy.Subscriber(rospy.get_param('~cameramount_topic' , 'CameraMountInfo'), CameraMountInfo, self.callback_camera_mount_info, queue_size=10)
+        self.homing_pub = rospy.Publisher(rospy.get_param('~homing_topic', 'homing_info'), HomingInfo, queue_size=1)
 
     def _read_byte(self):
         return struct.unpack('B', self.ser.read(1))[0]
