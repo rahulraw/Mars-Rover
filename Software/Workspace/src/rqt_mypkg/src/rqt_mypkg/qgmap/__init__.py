@@ -37,7 +37,7 @@ class GeoCoder(QtNetwork.QNetworkAccessManager) :
 		super(GeoCoder, self).__init__(parent)
 
 	@trace
-	def geocode(self, location) :
+	def geocode(self,location) :
 		url = QtCore.QUrl("http://maps.googleapis.com/maps/api/geocode/xml")
 		url.addQueryItem("address", location)
 		url.addQueryItem("sensor", "false")

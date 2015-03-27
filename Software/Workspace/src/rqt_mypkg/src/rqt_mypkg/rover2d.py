@@ -138,7 +138,7 @@ class OrientWidget(QtGui.QWidget):
         p.translate(-dx, -dy)
         p.rotate(-self.incline)
 
-        p.drawText(self.sideViewX + 130, self.sideViewY + 70, 'Incline: ' + str(-self.incline+360) + ' deg')
+        p.drawText(self.sideViewX + 130, self.sideViewY, 'Incline: ' + str(-self.incline+360) + ' deg')
         self.update()
 
     def createScrollbars(self):

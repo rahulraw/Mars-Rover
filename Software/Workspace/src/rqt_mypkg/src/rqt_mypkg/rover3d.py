@@ -76,11 +76,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.imuOn = False
 
     def calibrateImu(self):
-        self.roll_offset = -self.roll
-        self.pitch_offset = -self.pitch
-        self.yaw_offset = -self.yaw
-        # print 'roll = ' + str(int(self.roll)) + ' | pitch = ' + str(int(self.pitch)) + ' | yaw = ' + str(int(self.yaw))
-        # print 'roll offset = ' + str(int(self.roll_offset)) + ' | pitch offset = ' + str(int(self.pitch_offset)) + ' | yaw offset = ' + str(int(self.yaw_offset))
+        #print 'before  roll = ' + str(int(self.roll_offset)) + ' | pitch = ' + str(int(self.pitch_offset)) + ' | yaw = ' + str(int(self.yaw_offset))
+        self.roll_offset = self.prev_roll
+        self.pitch_offset = self.prev_pitch
+        self.yaw_offset = self.prev_yaw
+
+        #print 'after  roll = ' + str(int(self.roll)) + ' | pitch = ' + str(int(self.pitch)) + ' | yaw = ' + str(int(self.yaw))
+        #print 'roll offset = ' + str(int(self.roll_offset)) + ' | pitch offset = ' + str(int(self.pitch_offset)) + ' | yaw offset = ' + str(int(self.yaw_offset))
 
     def normalizeAngle(self, angle):
         while angle < 0:
@@ -92,7 +94,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         return angle
 
     def updateImu(self, data):
-        if (imuOn == False):
+        if (self.imuOn == False):
             self.imuT.exit()
             self.xRot = 0
             self.yRot = 0

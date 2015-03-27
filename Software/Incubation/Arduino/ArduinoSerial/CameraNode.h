@@ -8,7 +8,7 @@
 #include "ServoNode.h"
 #include "Subscriber.h"
 
-#define CAM_ROTATE_STOP 1360
+#define CAM_ROTATE_STOP 1357
 #define CAM_ROTATE_CW   CAM_ROTATE_STOP + 60
 #define CAM_ROTATE_CCW  CAM_ROTATE_STOP - 60
 
