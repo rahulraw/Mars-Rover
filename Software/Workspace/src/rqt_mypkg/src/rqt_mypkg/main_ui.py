@@ -81,8 +81,8 @@ class MainWindow(QMainWindow):
 
         # self.controlLayout.addWidget(self.pb_imu)
         self.controlLayout.addWidget(self.pb_cam_start)
-        self.controlLayout.addWidget(self.pb_calibrateImu)
         self.controlLayout.addWidget(self.pb_imu_start)
+        self.controlLayout.addWidget(self.pb_calibrateImu)
         self.controlArea.setLayout(self.controlLayout)
 
         self.sensingArea = QtGui.QScrollArea()
@@ -136,6 +136,7 @@ class MainWindow(QMainWindow):
         self.pb_cam_start.clicked[bool].connect(self._handle_pb_cam_start_clicked)
         self.pb_calibrateImu = QtGui.QPushButton('Calibrate IMU')
         self.pb_calibrateImu.clicked[bool].connect(self._handle_pb_calibrateImu_clicked)
+        self.pb_calibrateImu.setEnabled(False)
         self.pb_imu_start = QtGui.QPushButton('Start IMU')
         self.pb_imu_start.clicked[bool].connect(self._handle_pb_imu_start_clicked)
 
@@ -336,8 +337,10 @@ class MainWindow(QMainWindow):
     def _handle_pb_imu_start_clicked(self):
         if (self.glWidget.imuOn == False):
             self.glWidget.startImu()
+            self.pb_calibrateImu.setEnabled(True)
             self.pb_imu_start.setText("Kill IMU")
         else:
             self.glWidget.killImu()
-            self.pb_cam_start.setText("Start IMU")
+            self.pb_imu_start.setText("Start IMU")
+            self.pb_calibrateImu.setEnabled(False)
 

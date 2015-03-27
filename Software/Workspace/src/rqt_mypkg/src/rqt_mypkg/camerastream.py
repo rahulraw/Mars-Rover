@@ -102,7 +102,7 @@ class cameraWidget(QtGui.QWidget):
     def publishInfo(self):
         cam_info = CameraMountInfo()
         cam_info.x_pos = self.cam_xpos
-        cam_info.y_pos = self.cam_ypos
+        cam_info.y_pos = self.cam_ymin + (self.cam_ymax - self.cam_ypos)
         cam_info.zoom = self.cam_zpos
         self.info_pub.publish(cam_info)
 
@@ -153,7 +153,7 @@ class cameraWidget(QtGui.QWidget):
     def start(self, cv_image):
         if (self.cameraOn == False):
             self.cameraThread.exit()
-            self.cameraWindow.setPixmap(QtGui.QPixmap(imgPath))
+            self.cameraWindow.setPixmap(QtGui.QPixmap(self.imgPath))
         else:
             pixmap = QPixmap.fromImage(cv_image)
             self.setImage(pixmap)
