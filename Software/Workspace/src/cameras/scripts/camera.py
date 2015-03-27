@@ -13,8 +13,8 @@ from config import Config
 
 class Camera:
     def __init__(self):
-        self.topic = rospy.get_param('~topic', 'video_stream')
-        self.node = rospy.get_param('~node', 'camera') 
+        rospy.init_node('Camera', anonymous = True)
+        self.topic = rospy.get_param('~camera_topic', 'video_stream')
         self.camera_id = int(rospy.get_param('~camera_id', 0))
         self.webcam = Webcam(Config.scale, self.camera_id)
         self.webcam.start_capture()
@@ -24,8 +24,6 @@ class Camera:
             self.bridge = RGBBridge()
 
     def start(self):
-        rospy.init_node(self.node, anonymous = True)
-
         self.pub = rospy.Publisher(self.topic, self.bridge.getType(), queue_size = 10)
         self.rate = rospy.Rate(10)
 

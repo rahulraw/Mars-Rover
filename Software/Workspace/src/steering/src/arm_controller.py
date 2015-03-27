@@ -10,15 +10,15 @@ import time
 import traceback
 
 class ArmControl:
-    def __init__(self, node = 'ArmControl'):
-        self.min_battery = 119;
+    def __init__(self):
+        self.min_battery = 119
 
         self.joystick1 = Joystick()
         self.joystick2 = Joystick()
 
-        rospy.init_node(node, anonymous=True)
-        rospy.Subscriber("joystick1", Joystick, self.callback1)
-        rospy.Subscriber("joystick2", Joystick, self.callback2)
+        rospy.init_node('ArmControl', anonymous=True)
+        rospy.Subscriber(rospy.get_param('~joystick1_topic','joystick1'), Joystick, self.callback1)
+        rospy.Subscriber(rospy.get_param('~joystick2_topic','joystick2'), Joystick, self.callback2)
 
         self.rate = rospy.Rate(5)
 
@@ -28,9 +28,9 @@ class ArmControl:
     def motor_controller_connect(self):
         try:
             print("Connecting to motor controllers...")
-            self.boom = Jrk("/dev/boom")
-            self.stick = Jrk("/dev/stick")
-            self.endAndYaw = RoboClaw("/dev/endAndYaw")
+            self.boom = Jrk(rospy.get_param('~boom_id','/dev/boom'))
+            self.stick = Jrk(rospy.get_param('~stick_id','/dev/stick'))
+            self.endAndYaw = RoboClaw(rospy.get_param('~endAndYaw_id','/dev/endAndYaw'))
             return True
         except:
             return False
