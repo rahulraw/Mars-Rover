@@ -1,3 +1,3 @@
 class Config:
     gray = False
-    scale = 1
+    scale = 0.2
