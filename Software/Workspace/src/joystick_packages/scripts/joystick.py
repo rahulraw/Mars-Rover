@@ -6,16 +6,17 @@ from std_msgs.msg import Int16MultiArray
 
 class Joystick:
     def __init__(self):
-        self.topic = rospy.get_param('topic', 'joystick1')
-        self.node = rospy.get_param('node', 'joystick1')
-        self.pipe = open(rospy.get_param('inputid', '/dev/input/js0'), 'r')
+
         self.pconstant = 0.2
         self.joy_msg = Msg()
         self.set_buttons = [self.set_trigger, self.set_b2, self.set_b3, self.set_b4, self.set_b5, self.set_b6, self.set_b7, self.set_b8, self.set_b9, self.set_b10, self.set_b11]
         self.set_axis = [self.set_main_joy_x, self.set_main_joy_y, self.set_bottom_toggle_y]
 
     def start(self):
-        rospy.init_node(self.node, anonymous = True)
+        rospy.init_node('joystick', anonymous = True)
+        self.topic = rospy.get_param('~topic', 'joystick1')
+        self.pipe = open(rospy.get_param('~input_id', '/dev/input/js0'), 'r')
+
         self.pub = rospy.Publisher(self.topic, Msg, queue_size = 10)
 
         brake_value = 0

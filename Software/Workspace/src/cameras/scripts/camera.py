@@ -37,7 +37,7 @@ class Camera:
                 image = self.webcam.read_image()
             except ImageNoneTypeException, e:
                 rospy.loginfo(Messages.image_none_type %(time, e))
-                
+
             rospy.loginfo("Image published at %s" %time)
 
             image = self.bridge.to_imgmsg(image)
