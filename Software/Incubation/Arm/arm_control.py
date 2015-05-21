@@ -1,11 +1,11 @@
 import math
 import rospy
 import jrk
-from joystick_packages.msg import Controller
+from joystick_packages.msg import Joystick
 
 class JrkArm:
     def __init__(self, node_id):
-        self.jrk = jrk.Jrk(node_id)
+        self.jrk = jrk.Jrk("/dev/stick")
         self.direction = 0
         self.stopped = True
         self.jrk.jrkMotorStop()
@@ -27,25 +27,31 @@ class ArmControl:
         self.topic = topic
         self.node = node
 
-        self.arm1 = JrkArm("/dev/ttyACM0")
-        self.controller = Controller()
+        self.boom = JrkArm("/dev/boom")
+        self.stick = JrkArm("/dev/stick")
 
         rospy.init_node(self.node, anonymous=True)
-        rospy.Subscriber(self.topic, Controller, self.callback)
+        rospy.Subscriber("joystick1", Joystick, self.callback1)
+        rospy.Subscriber("joystick2", Joystick, self.callback2)
         self.rate = rospy.Rate(10)
         
     def get_direction(self, value):
         return int(0 if not value else value / abs(value))
 
-    def callback(self, controller):
-        self.arm1.set_direction(self.get_direction(controller.left_joy_y))
+    def callback1(self, controller):
+        self.boom.set_direction(self.get_direction(controller.main_joy_y))
+
+    def callback2(self, controller):
+        self.stick.set_direction(self.get_direction(controller.main_joy_y))
 
     def start(self):
 
-        self.arm1.jrk.jrkGetErrorFlagsHalting()
+        self.boom.jrk.jrkGetErrorFlagsHalting()
+        self.stick.jrk.jrkGetErrorFlagsHalting()
         
         while not rospy.is_shutdown():
-            self.arm1.run()
+            self.boom.run()
+            self.stick.run()
             self.rate.sleep()
 
 

@@ -144,8 +144,8 @@ class Steering:
             if self.joystick.x:
                 self.print_controller("Back Left", self.controllerBL, self.steering_calc.back_left_angle)
 
-            if loop_counter % 5 == 0:
-                self.info_pub.publish(self._get_info())
+            # if loop_counter % 5 == 0:
+            #     self.info_pub.publish(self._get_info())
 
             loop_counter = loop_counter + 1
 
@@ -279,10 +279,10 @@ class Steering:
         rover_info.back_right_angle = self.steering_calc.back_right_angle
 
         # Information from the encoders
-        rover_info.real_front_left_angle  = self.controllerFL.getAngle()
-        rover_info.real_front_right_angle = self.controllerFR.getAngle()
-        rover_info.real_back_left_angle   = self.controllerBL.getAngle()
-        rover_info.real_back_right_angle  = self.controllerBR.getAngle()
+        rover_info.real_front_left_angle  = min(255, int(self.controllerFL.getAngle()))
+        rover_info.real_front_right_angle = min(255, int(self.controllerFR.getAngle()))
+        rover_info.real_back_left_angle   = min(255, int(self.controllerBL.getAngle()))
+        rover_info.real_back_right_angle  = min(255, int(self.controllerBR.getAngle()))
 
         # Current information from the motor controller
         rover_info.front_left_current  = max(self.controllerFL.readcurrents())

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#/usr/bin/python
 import serial
 import struct
 import rospy
@@ -13,8 +13,8 @@ class Arduino:
         self.ACCEPT_SERIAL = 255
         self.SEND_SERIAL = 254
         rospy.init_node("serial_node", anonymous=True)
-        self.serial_port = rospy.get_param('~serial_port', '/dev/arduino')
-        self.setup_topics()
+        #self.serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0') #/dev/ardiono
+        self.serial_port = '/dev/ttyACM0'
         self.ser = serial.Serial(self.serial_port, 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
@@ -26,6 +26,7 @@ class Arduino:
         self.message_length = 0
         self.messages = []
         self.publish_nodes = [self.homing]
+        self.setup_topics()
 
     def callback_manipulator(self, controller):
         if controller.killswitch != self.controller.killswitch:
@@ -58,6 +59,9 @@ class Arduino:
                 length = self._read_byte()
                 data = [self._read_byte() for i in range(length)]
                 self.publish_nodes[topic - 1](data)
+
+                print("RECIEVED Topic %d" % topic)
+                print("RECIEVED Length %d" % length)
             else:
                 print(msg)
                 # Data needs to be passed into our other message
@@ -66,10 +70,9 @@ class Arduino:
         if self.send_manipulator and self.controller.left_trigger == 0:
             self.message_length += 1
             self.messages.append(chr(1))
-            self.messages.append(chr((self.controller.left_joy_x + 90) / 2))
             self.messages.append(chr((self.controller.right_joy_y + 90) / 2))
-            self.messages.append(chr((self.controller.right_joy_x + 90) / 2))
             self.send_manipulator = False
+            print("SEND MANIP")
 
     def auto_shut_down(self):
         if self.send_shut_down:
@@ -77,6 +80,7 @@ class Arduino:
             self.messages.append(chr(2))
             self.messages.append(chr(1 if self.shut_down else 0))
             self.send_shut_down = False
+            print("SEND SHUT DOWN")
 
     def camera_mount_control(self):
         if self.send_camera_mount_info:
@@ -86,6 +90,7 @@ class Arduino:
             self.messages.append(chr(self.camera_mount_info.y_pos))
             self.messages.append(chr(self.camera_mount_info.zoom))
             self.send_camera_mount_info = False
+            print("SEND CAMERA")
 
     def homing(self, data):
         homing_info = HomingInfo()
