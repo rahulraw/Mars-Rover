@@ -13,7 +13,7 @@ class Arduino:
         self.ACCEPT_SERIAL = 255
         self.SEND_SERIAL = 254
         rospy.init_node("serial_node", anonymous=True)
-        self.serial_port = rospy.get_param('~serial_port', '/dev/arduino')
+        self.serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0')
         self.setup_topics()
         self.ser = serial.Serial(self.serial_port, 9600)
         self.rate = rospy.Rate(10)
@@ -40,7 +40,7 @@ class Arduino:
         self.shut_down = shut_down.data
 
     def callback_camera_mount_info(self, camera_mount_info):
-        print(camera_mount_info)
+        #print(camera_mount_info)
         self.camera_mount_info = camera_mount_info
         self.send_camera_mount_info = True
 
@@ -70,6 +70,7 @@ class Arduino:
             self.messages.append(chr((self.controller.right_joy_y + 90) / 2))
             self.messages.append(chr((self.controller.right_joy_x + 90) / 2))
             self.send_manipulator = False
+            print("SEND MANIP")
 
     def auto_shut_down(self):
         if self.send_shut_down:
@@ -77,6 +78,7 @@ class Arduino:
             self.messages.append(chr(2))
             self.messages.append(chr(1 if self.shut_down else 0))
             self.send_shut_down = False
+            print("SEND AUTO SHUTDOWN")
 
     def camera_mount_control(self):
         if self.send_camera_mount_info:
@@ -86,6 +88,7 @@ class Arduino:
             self.messages.append(chr(self.camera_mount_info.y_pos))
             self.messages.append(chr(self.camera_mount_info.zoom))
             self.send_camera_mount_info = False
+            print("SEND CAMERA MOUNT")
 
     def homing(self, data):
         homing_info = HomingInfo()
