@@ -1,0 +1,10 @@
+ROS IMPROVEMENTS
+-Use ps3joy package for controller
+-Use geometry_msgs package (Twist) for velocity commands
+-Use sensor_msgs for IMU etc
+-Maybe use velocity muxer to prioritize velocity (in the future)
+-Apply ROSLINT to all written code
+
+SOFTWARE IMPROVEMENTS
+-Start porting to C++?
+-Proper use of Git
