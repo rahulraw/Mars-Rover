@@ -13,8 +13,6 @@ class Arduino:
         self.ACCEPT_SERIAL = 255
         self.SEND_SERIAL = 254
         rospy.init_node("serial_node", anonymous=True)
-        #self.serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0') #/dev/ardiono
-        self.serial_port = '/dev/ttyACM0'
         self.ser = serial.Serial(self.serial_port, 9600)
         self.rate = rospy.Rate(10)
         self.controller = Controller()
@@ -41,7 +39,7 @@ class Arduino:
         self.shut_down = shut_down.data
 
     def callback_camera_mount_info(self, camera_mount_info):
-        print(camera_mount_info)
+        # print(camera_mount_info)
         self.camera_mount_info = camera_mount_info
         self.send_camera_mount_info = True
 
@@ -59,9 +57,6 @@ class Arduino:
                 length = self._read_byte()
                 data = [self._read_byte() for i in range(length)]
                 self.publish_nodes[topic - 1](data)
-
-                print("RECIEVED Topic %d" % topic)
-                print("RECIEVED Length %d" % length)
             else:
                 print(msg)
                 # Data needs to be passed into our other message
@@ -72,7 +67,6 @@ class Arduino:
             self.messages.append(chr(1))
             self.messages.append(chr((self.controller.right_joy_y + 90) / 2))
             self.send_manipulator = False
-            print("SEND MANIP")
 
     def auto_shut_down(self):
         if self.send_shut_down:
@@ -80,7 +74,6 @@ class Arduino:
             self.messages.append(chr(2))
             self.messages.append(chr(1 if self.shut_down else 0))
             self.send_shut_down = False
-            print("SEND SHUT DOWN")
 
     def camera_mount_control(self):
         if self.send_camera_mount_info:
@@ -90,7 +83,6 @@ class Arduino:
             self.messages.append(chr(self.camera_mount_info.y_pos))
             self.messages.append(chr(self.camera_mount_info.zoom))
             self.send_camera_mount_info = False
-            print("SEND CAMERA")
 
     def homing(self, data):
         homing_info = HomingInfo()
